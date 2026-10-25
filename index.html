@@ -457,28 +457,7 @@ function applyTheme(){const r=document.documentElement;const t=(S.theme==='light
   if(TG){try{const bg=getComputedStyle(r).getPropertyValue('--bg').trim();TG.setHeaderColor(bg);TG.setBackgroundColor(bg);if(TG.setBottomBarColor)TG.setBottomBarColor(bg)}catch(e){}}}
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
-let cloudReady=false,cloudBusy=false,cloudQueued=false,cloudTimer=0;
-const CLOUD_META='pfl_save_v1_meta',CLOUD_PREFIX='pfl_save_v1_';
-function cloudCall(method,...args){return new Promise((resolve,reject)=>{const cs=TG&&TG.CloudStorage;if(!cs||typeof cs[method]!=='function')return reject(new Error('CloudStorage недоступен'));cs[method](...args,(err,result)=>err?reject(err):resolve(result));});}
-function splitCloudText(str){const out=[];for(let i=0;i<str.length;){let end=Math.min(i+3000,str.length);if(end<str.length&&end>i&&str.charCodeAt(end-1)>=0xD800&&str.charCodeAt(end-1)<=0xDBFF)end--;out.push(str.slice(i,end));i=end;}return out;}
-async function cloudWrite(state){if(!TG||!TG.CloudStorage)return false;const parts=splitCloudText(JSON.stringify(state));for(let i=0;i<parts.length;i++)await cloudCall('setItem',CLOUD_PREFIX+i,parts[i]);await cloudCall('setItem',CLOUD_META,String(parts.length));return true;}
-async function cloudInit(){
-  if(!TG||!TG.CloudStorage)return;
-  try{
-    const countRaw=await cloudCall('getItem',CLOUD_META),count=parseInt(countRaw||'0',10);
-    if(Number.isFinite(count)&&count>0&&count<100){
-      const keys=Array.from({length:count},(_,i)=>CLOUD_PREFIX+i),vals=await cloudCall('getItems',keys);
-      const json=keys.map(k=>vals&&vals[k]||'').join('');
-      const remote=JSON.parse(json);
-      if(remote&&typeof remote==='object'&&Array.isArray(remote.plots)){S=remote;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};toast('☁️ Прогресс загружен из Telegram');}
-    }else{
-      // Первый запуск облака: переносим существующий локальный прогресс.
-      await cloudWrite(S);toast('☁️ Прогресс подключён к Telegram');
-    }
-  }catch(e){console.warn('Telegram CloudStorage:',e);toast('Облако недоступно — пока сохраняем локально');}
-}
-async function cloudFlush(){if(!cloudReady||cloudBusy||!cloudQueued)return;cloudBusy=true;cloudQueued=false;try{await cloudWrite(S)}catch(e){console.warn('Cloud save failed:',e)}finally{cloudBusy=false;if(cloudQueued)cloudFlush();}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}}if(cloudReady&&TG&&TG.CloudStorage){cloudQueued=true;clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudFlush,700)}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}}}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
 function unlockedCount(){return S.plots.filter(p=>p.u&&!p.g).length}
 function unlockCost(){return 40*(unlockedCount()-3)}
@@ -598,14 +577,14 @@ document.getElementById('view').addEventListener('click',e=>{
   if(d.go){tab=d.go;render();return}
   else if(d.tg){const u='https://t.me/FarmLand_news';if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}
   else if(d.theme){S.theme=d.theme;applyTheme()}
-  else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;(async()=>{try{if(TG&&TG.CloudStorage){let count=0;try{count=parseInt(await cloudCall('getItem',CLOUD_META)||'0',10)||0}catch(x){}const keys=[CLOUD_META,...Array.from({length:Math.min(Math.max(count,0),99)},(_,i)=>CLOUD_PREFIX+i)];for(const key of keys){try{await cloudCall('removeItem',key)}catch(x){}}}try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(x){b.disabled=false;toast('Не удалось сбросить облако. Попробуй ещё раз')}})();return}
+  else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}try{localStorage.removeItem(KEY)}catch(x){}location.reload();return}
   else if(d.btab){btab=d.btab}
   else if(d.ach){const a=AT[d.ach],L=alv(d.ach),nx=a.lv[L];toast(nx?a.name+' '+R[L+1]+': '+a.verb+' '+nx+' '+a.unit+' ('+a.get()+'/'+nx+')':a.name+' III: достигнут максимальный уровень')}
   else if(d.scare){tab='skins'}
   else if(d.buyscare){if(S.coins<SC){toast('Нужно '+SC+' монет');return}S.coins-=SC;S.sc.w=100;S.sc.own=true;fly('🛡️ Пугало',e)}
   else if(d.start){const n=(document.getElementById('nn').value||'').trim();if(n.length<2){toast('Ник: минимум 2 символа');return}S.nick=n;S.reg=true;S.rd=Date.now();S.gift=false;tab='intro'}
   else if(d.nick){const n=(document.getElementById('nn').value||'').trim();if(n.length<2){toast('Ник: минимум 2 символа');return}if(S.coins<1475){toast('Нужно 1475 монет');return}S.coins-=1475;S.nick=n;toast('Ник изменён')}
-  else if(d.gift){if(S.gift){tab='menu';render();return}S.gift=true;S.coins+=150;S.qn=Date.now()+18e5;tab='menu';toast('Получено: 150 монет');fly('+150 🪙',e)}
+  else if(d.gift){S.gift=true;S.coins+=150;S.qn=Date.now()+18e5;tab='menu';toast('Получено: 150 монет');fly('+150 🪙',e)}
   else if(d.ptab){ptab=d.ptab;pscroll=true}
   else if(d.pc){const a=d.pc.split(':');window.justPc=d.pc;setTimeout(()=>{window.justPc=''},700);const t=claim(a[0],+a[1]);if(t)fly(t,e)}
   else if(d.buyprem){pay('premium');return}
@@ -648,14 +627,12 @@ document.getElementById('view').addEventListener('click',e=>{
 document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
-async function startGame(){
-  if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
-  await cloudInit();cloudReady=true;
-  claimPaid();setInterval(tick,1000);applyTheme();render();
-  {const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
-  Promise.all([document.fonts?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve(),new Promise(r=>setTimeout(r,500))]).then(()=>document.getElementById('boot').classList.add('off'));
-}
-startGame();
+claimPaid();
+setInterval(tick,1000);
+applyTheme();
+render();
+{const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
+;Promise.all([document.fonts?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve(),new Promise(r=>setTimeout(r,1100))]).then(()=>document.getElementById('boot').classList.add('off'));
 addEventListener('error',()=>toast('Что-то пошло не так, попробуй перезайти'));
 </script>
 </body>
