@@ -598,14 +598,14 @@ document.getElementById('view').addEventListener('click',e=>{
   if(d.go){tab=d.go;render();return}
   else if(d.tg){const u='https://t.me/FarmLand_news';if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}
   else if(d.theme){S.theme=d.theme;applyTheme()}
-  else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}try{localStorage.removeItem(KEY)}catch(x){}location.reload();return}
+  else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;(async()=>{try{if(TG&&TG.CloudStorage){let count=0;try{count=parseInt(await cloudCall('getItem',CLOUD_META)||'0',10)||0}catch(x){}const keys=[CLOUD_META,...Array.from({length:Math.min(Math.max(count,0),99)},(_,i)=>CLOUD_PREFIX+i)];for(const key of keys){try{await cloudCall('removeItem',key)}catch(x){}}}try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(x){b.disabled=false;toast('Не удалось сбросить облако. Попробуй ещё раз')}})();return}
   else if(d.btab){btab=d.btab}
   else if(d.ach){const a=AT[d.ach],L=alv(d.ach),nx=a.lv[L];toast(nx?a.name+' '+R[L+1]+': '+a.verb+' '+nx+' '+a.unit+' ('+a.get()+'/'+nx+')':a.name+' III: достигнут максимальный уровень')}
   else if(d.scare){tab='skins'}
   else if(d.buyscare){if(S.coins<SC){toast('Нужно '+SC+' монет');return}S.coins-=SC;S.sc.w=100;S.sc.own=true;fly('🛡️ Пугало',e)}
   else if(d.start){const n=(document.getElementById('nn').value||'').trim();if(n.length<2){toast('Ник: минимум 2 символа');return}S.nick=n;S.reg=true;S.rd=Date.now();S.gift=false;tab='intro'}
   else if(d.nick){const n=(document.getElementById('nn').value||'').trim();if(n.length<2){toast('Ник: минимум 2 символа');return}if(S.coins<1475){toast('Нужно 1475 монет');return}S.coins-=1475;S.nick=n;toast('Ник изменён')}
-  else if(d.gift){S.gift=true;S.coins+=150;S.qn=Date.now()+18e5;tab='menu';toast('Получено: 150 монет');fly('+150 🪙',e)}
+  else if(d.gift){if(S.gift){tab='menu';render();return}S.gift=true;S.coins+=150;S.qn=Date.now()+18e5;tab='menu';toast('Получено: 150 монет');fly('+150 🪙',e)}
   else if(d.ptab){ptab=d.ptab;pscroll=true}
   else if(d.pc){const a=d.pc.split(':');window.justPc=d.pc;setTimeout(()=>{window.justPc=''},700);const t=claim(a[0],+a[1]);if(t)fly(t,e)}
   else if(d.buyprem){pay('premium');return}
