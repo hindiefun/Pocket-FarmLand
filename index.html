@@ -315,7 +315,9 @@ const CROPS={
 const KEY='farm-proto-1';
 const CLOUD_PREFIX='pocket_farm_save_v1';
 const CLOUD_META=CLOUD_PREFIX+'_meta';
+const CLOUD_PLOTS=CLOUD_PREFIX+'_plots';
 const CLOUD_CHUNK=CLOUD_PREFIX+'_part_';
+let lastCloudUpdated=0;
 const cloudApi=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.CloudStorage;
 let cloudUsable=false;
 function cloudCall(method,...args){return new Promise((resolve,reject)=>{if(!cloudApi||typeof cloudApi[method]!=='function'){reject(new Error('CloudStorage недоступен'));return}try{cloudApi[method](...args,(err,value)=>{if(err||((method==='setItem'||method==='removeItem'||method==='removeItems')&&value===false)){reject(err||new Error('CloudStorage operation failed'));return}resolve(value)})}catch(e){reject(e)}})}
@@ -330,6 +332,13 @@ async function readCloud(){
     for(let i=0;i<meta.count;i++){const part=await cloudCall('getItem',CLOUD_CHUNK+i);if(typeof part!=='string')throw new Error('Missing cloud save part');parts.push(part)}
     const parsed=JSON.parse(parts.join(''));
     if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.plots)||typeof parsed.coins!=='number')throw new Error('Invalid cloud save');
+    lastCloudUpdated=Number(meta.updated)||0;
+    // Keep the field state in its own versioned key as well. This protects planted
+    // crops and plot unlocks from being lost if a large save is partially updated.
+    try{
+      const plotRaw=await cloudCall('getItem',CLOUD_PLOTS);
+      if(plotRaw){const plotData=JSON.parse(plotRaw);if(plotData&&plotData.updated===lastCloudUpdated&&Array.isArray(plotData.plots))parsed.plots=plotData.plots}
+    }catch(e){console.warn('Telegram CloudStorage plot backup unavailable:',e)}
     return parsed;
   }catch(e){cloudUsable=false;console.warn('Telegram CloudStorage load failed:',e);return null}
 }
@@ -339,8 +348,13 @@ async function writeCloud(snapshot){
   for(let i=0;i<raw.length;i+=size)parts.push(raw.slice(i,i+size));
   if(!parts.length)parts.push(raw);
   if(parts.length>100)throw new Error('Сохранение слишком большое');
+  const updated=Math.max(Date.now(),lastCloudUpdated+1);
+  // Write plots independently too, then publish the matching version in metadata
+  // only after the full save is in place. Readers ignore mismatched versions.
+  if(Array.isArray(snapshot.plots))await cloudCall('setItem',CLOUD_PLOTS,JSON.stringify({updated,plots:snapshot.plots}));
   for(let i=0;i<parts.length;i++)await cloudCall('setItem',CLOUD_CHUNK+i,parts[i]);
-  await cloudCall('setItem',CLOUD_META,JSON.stringify({version:1,count:parts.length,updated:Date.now()}));
+  await cloudCall('setItem',CLOUD_META,JSON.stringify({version:2,count:parts.length,updated}));
+  lastCloudUpdated=updated;
   for(let i=parts.length;i<100;i++){try{const old=await cloudCall('getItem',CLOUD_CHUNK+i);if(old===undefined||old===null||old==='')break;await cloudCall('removeItem',CLOUD_CHUNK+i)}catch(e){break}}
 }
 let cloudWriteQueue=Promise.resolve();
@@ -348,12 +362,23 @@ async function clearCloud(){
   if(!cloudApi)return;
   if(!cloudUsable){try{await cloudCall('getItem',CLOUD_META);cloudUsable=true}catch(e){throw new Error('CloudStorage недоступен для сброса')}}
   let count=0;try{const raw=await cloudCall('getItem',CLOUD_META);if(raw){const m=JSON.parse(raw);if(Number.isInteger(m.count)&&m.count>0&&m.count<=100)count=m.count}}catch(e){throw new Error('Не удалось прочитать облачное сохранение')}
-  const keys=[CLOUD_META,...Array.from({length:count},(_,i)=>CLOUD_CHUNK+i)];
+  const keys=[CLOUD_META,CLOUD_PLOTS,...Array.from({length:count},(_,i)=>CLOUD_CHUNK+i)];
   if(typeof cloudApi.removeItems==='function')await cloudCall('removeItems',keys);
   else for(const key of keys)await cloudCall('removeItem',key);
 }
 const localInitial=load();
 const cloudInitial=await readCloud();
+// Repair older cloud saves where the economy was synced but planted crops were not.
+// Only take local plots when the rest of the important progress matches, avoiding
+// resurrection of crops that were already harvested on another device.
+const repairPlotsFromLocal=!!(cloudInitial&&localInitial&&Array.isArray(cloudInitial.plots)&&Array.isArray(localInitial.plots)
+  &&!cloudInitial.plots.some(p=>p&&p.c)&&localInitial.plots.some(p=>p&&p.c)
+  &&cloudInitial.coins===localInitial.coins
+  &&(cloudInitial.xp||0)===(localInitial.xp||0)
+  &&(cloudInitial.harv||0)===(localInitial.harv||0)
+  &&JSON.stringify(cloudInitial.seeds||{})===JSON.stringify(localInitial.seeds||{})
+  &&JSON.stringify(cloudInitial.crops||{})===JSON.stringify(localInitial.crops||{}));
+if(repairPlotsFromLocal)cloudInitial.plots=localInitial.plots.map(p=>({...p}));
 let S=cloudInitial||localInitial||{coins:0,seeds:{},crops:{},sel:'',plots:Array.from({length:9},(_,i)=>({u:i<4,c:null,t:0}))};
 const migrateLocalToCloud=!cloudInitial&&!!localInitial&&cloudUsable;
 S.harv=S.harv||0;S.earned=S.earned||0;S.ach=S.ach||{};S.sc=S.sc||{w:0,n:0};S.xp=S.xp||0;S.q=S.q||[];if(S.pp&&S.pp.v!==4){S.pp=undefined;S.skins=[];S.picons=[];S.sc.skin='';if(S.icon>2)S.icon=0}if(S.reg&&!S.rd)S.rd=Date.now();
@@ -502,7 +527,10 @@ function applyTheme(){const r=document.documentElement;const t=(S.theme==='light
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
 function save(){
   let snapshot;
-  try{snapshot=JSON.stringify(S);localStorage.setItem(KEY,snapshot)}catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}return}
+  try{
+    const stateToSave={...S,plots:Array.isArray(S.plots)?S.plots.map(p=>({...p})):[]};
+    snapshot=JSON.stringify(stateToSave);localStorage.setItem(KEY,snapshot)
+  }catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}return}
   if(cloudUsable&&cloudApi){const copy=JSON.parse(snapshot);cloudWriteQueue=cloudWriteQueue.then(()=>writeCloud(copy)).catch(e=>{cloudUsable=false;if(!save.cloudWarn){save.cloudWarn=1;console.warn('Telegram CloudStorage save failed:',e);toast('Облачное сохранение недоступно; прогресс сохранён локально')}})}
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
@@ -678,7 +706,7 @@ claimPaid();
 setInterval(tick,1000);
 applyTheme();
 render();
-if(cloudUsable&&(!cloudInitial||migrateLocalToCloud))save();
+if(cloudUsable&&(!cloudInitial||migrateLocalToCloud||repairPlotsFromLocal))save();
 {const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
 ;Promise.all([document.fonts?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve(),new Promise(r=>setTimeout(r,1100))]).then(()=>document.getElementById('boot').classList.add('off'));
 addEventListener('error',()=>toast('Что-то пошло не так, попробуй перезайти'));
