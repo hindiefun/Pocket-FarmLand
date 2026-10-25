@@ -457,7 +457,28 @@ function applyTheme(){const r=document.documentElement;const t=(S.theme==='light
   if(TG){try{const bg=getComputedStyle(r).getPropertyValue('--bg').trim();TG.setHeaderColor(bg);TG.setBackgroundColor(bg);if(TG.setBottomBarColor)TG.setBottomBarColor(bg)}catch(e){}}}
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}}}
+let cloudReady=false,cloudBusy=false,cloudQueued=false,cloudTimer=0;
+const CLOUD_META='pfl_save_v1_meta',CLOUD_PREFIX='pfl_save_v1_';
+function cloudCall(method,...args){return new Promise((resolve,reject)=>{const cs=TG&&TG.CloudStorage;if(!cs||typeof cs[method]!=='function')return reject(new Error('CloudStorage недоступен'));cs[method](...args,(err,result)=>err?reject(err):resolve(result));});}
+function splitCloudText(str){const out=[];for(let i=0;i<str.length;){let end=Math.min(i+3000,str.length);if(end<str.length&&end>i&&str.charCodeAt(end-1)>=0xD800&&str.charCodeAt(end-1)<=0xDBFF)end--;out.push(str.slice(i,end));i=end;}return out;}
+async function cloudWrite(state){if(!TG||!TG.CloudStorage)return false;const parts=splitCloudText(JSON.stringify(state));for(let i=0;i<parts.length;i++)await cloudCall('setItem',CLOUD_PREFIX+i,parts[i]);await cloudCall('setItem',CLOUD_META,String(parts.length));return true;}
+async function cloudInit(){
+  if(!TG||!TG.CloudStorage)return;
+  try{
+    const countRaw=await cloudCall('getItem',CLOUD_META),count=parseInt(countRaw||'0',10);
+    if(Number.isFinite(count)&&count>0&&count<100){
+      const keys=Array.from({length:count},(_,i)=>CLOUD_PREFIX+i),vals=await cloudCall('getItems',keys);
+      const json=keys.map(k=>vals&&vals[k]||'').join('');
+      const remote=JSON.parse(json);
+      if(remote&&typeof remote==='object'&&Array.isArray(remote.plots)){S=remote;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};toast('☁️ Прогресс загружен из Telegram');}
+    }else{
+      // Первый запуск облака: переносим существующий локальный прогресс.
+      await cloudWrite(S);toast('☁️ Прогресс подключён к Telegram');
+    }
+  }catch(e){console.warn('Telegram CloudStorage:',e);toast('Облако недоступно — пока сохраняем локально');}
+}
+async function cloudFlush(){if(!cloudReady||cloudBusy||!cloudQueued)return;cloudBusy=true;cloudQueued=false;try{await cloudWrite(S)}catch(e){console.warn('Cloud save failed:',e)}finally{cloudBusy=false;if(cloudQueued)cloudFlush();}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}}if(cloudReady&&TG&&TG.CloudStorage){cloudQueued=true;clearTimeout(cloudTimer);cloudTimer=setTimeout(cloudFlush,700)}}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
 function unlockedCount(){return S.plots.filter(p=>p.u&&!p.g).length}
 function unlockCost(){return 40*(unlockedCount()-3)}
@@ -627,12 +648,14 @@ document.getElementById('view').addEventListener('click',e=>{
 document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
-claimPaid();
-setInterval(tick,1000);
-applyTheme();
-render();
-{const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
-;Promise.all([document.fonts?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve(),new Promise(r=>setTimeout(r,1100))]).then(()=>document.getElementById('boot').classList.add('off'));
+async function startGame(){
+  if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
+  await cloudInit();cloudReady=true;
+  claimPaid();setInterval(tick,1000);applyTheme();render();
+  {const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
+  Promise.all([document.fonts?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve(),new Promise(r=>setTimeout(r,500))]).then(()=>document.getElementById('boot').classList.add('off'));
+}
+startGame();
 addEventListener('error',()=>toast('Что-то пошло не так, попробуй перезайти'));
 </script>
 </body>
