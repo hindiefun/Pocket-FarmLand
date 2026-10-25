@@ -371,13 +371,15 @@ const cloudInitial=await readCloud();
 // Repair older cloud saves where the economy was synced but planted crops were not.
 // Only take local plots when the rest of the important progress matches, avoiding
 // resurrection of crops that were already harvested on another device.
+const cloudWithoutPlots=cloudInitial?{...cloudInitial}:null;
+const localWithoutPlots=localInitial?{...localInitial}:null;
+if(cloudWithoutPlots)delete cloudWithoutPlots.plots;
+if(localWithoutPlots)delete localWithoutPlots.plots;
 const repairPlotsFromLocal=!!(cloudInitial&&localInitial&&Array.isArray(cloudInitial.plots)&&Array.isArray(localInitial.plots)
   &&!cloudInitial.plots.some(p=>p&&p.c)&&localInitial.plots.some(p=>p&&p.c)
-  &&cloudInitial.coins===localInitial.coins
-  &&(cloudInitial.xp||0)===(localInitial.xp||0)
-  &&(cloudInitial.harv||0)===(localInitial.harv||0)
-  &&JSON.stringify(cloudInitial.seeds||{})===JSON.stringify(localInitial.seeds||{})
-  &&JSON.stringify(cloudInitial.crops||{})===JSON.stringify(localInitial.crops||{}));
+  // Restore local plots only when every other saved field is identical. This
+  // avoids resurrecting plants lost to crows, season changes, or later actions.
+  &&JSON.stringify(cloudWithoutPlots)===JSON.stringify(localWithoutPlots));
 if(repairPlotsFromLocal)cloudInitial.plots=localInitial.plots.map(p=>({...p}));
 let S=cloudInitial||localInitial||{coins:0,seeds:{},crops:{},sel:'',plots:Array.from({length:9},(_,i)=>({u:i<4,c:null,t:0}))};
 const migrateLocalToCloud=!cloudInitial&&!!localInitial&&cloudUsable;
@@ -497,7 +499,11 @@ function checkAch(){passCheck();S.al=S.al||{};for(const k in AT){const L=alv(k);
 const scareHtml=()=>{const w=S.sc.w;return `<div class="scare"><button class="sc ${w>0?'':'off'}" data-scare="1">${SKINS[(S.skins||[]).includes(S.sc.skin)?S.sc.skin:'classic']}</button><div class="sw"><div class="bar2"><i style="width:${w}%"></i></div><small>${w>0?'Пугало: '+w+'%':(S.sc.own?'Пугало сломалось':'Пугала нет')}</small></div>${w>0?'':`<button class="btn" data-buyscare="1">Купить · ${SC} 🪙</button>`}</div>`};
 function tick(){
   if(!S.nr)S.nr=Date.now()+300000;
-  if(S.reg&&S.gift!==false)passCheck();
+  if(S.reg&&S.gift!==false){
+    const passBefore=JSON.stringify(S.pp||null);
+    passCheck();
+    if(JSON.stringify(S.pp||null)!==passBefore)save();
+  }
   if(S.reg&&S.gift!==false){const now=Date.now(),gap=()=>(12+Math.random()*12)*36e5;if(!S.qn)S.qn=now+gap();let add=0;while(S.q.length<3&&now>=S.qn){S.q.push(newQuest());S.qn+=gap();add++}if(S.q.length>=3&&now>=S.qn)S.qn=now+gap();if(add){save();toast('Новое письмо ✉️')}}
   if(Date.now()>S.nr){
     S.nr=Date.now()+(240+Math.random()*240)*1000;
