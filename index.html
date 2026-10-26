@@ -296,6 +296,7 @@ button.tk{width:100%;border:0;font:inherit;color:inherit;text-align:left;cursor:
 .pf-reg{text-align:center;color:var(--mute);font-size:12px;margin:8px 0 0}
 #toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%}
 #toast.on{opacity:1}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea{-webkit-user-select:text;user-select:text}
 </style>
 <script>
 /* no-zoom: pinch, double-tap, iOS gestures */
@@ -320,11 +321,11 @@ document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},o
 (async function pocketFarmBootstrap(){
 const CROPS={
   potato:{name:'Картошка',icon:'🥔',time:600,seed:20,sell:12,xp:1,y:[2,4],s:[0,2]},
-  wheat:{name:'Пшеница',icon:'🌾',time:1500,seed:45,sell:55,xp:3,y:[1,2],s:[3,0]},
+  wheat:{name:'Пшеница',icon:'🌾',time:1500,seed:45,sell:55,xp:3,y:[1,1],s:[3,0]},
   corn:{name:'Кукуруза',icon:'🌽',time:3000,seed:75,sell:100,xp:8,y:[1,2],s:[1,2]},
   tomato:{name:'Помидор',icon:'🍅',time:4500,seed:120,sell:160,xp:12,y:[1,2],s:[1]},
   berry:{name:'Клубника',icon:'🍓',time:6600,seed:175,sell:245,xp:18,y:[1,2],s:[0,1]},
-  pumpkin:{name:'Тыква',icon:'🎃',time:12600,seed:300,sell:460,xp:36,y:[1,2],s:[2]}
+  pumpkin:{name:'Тыква',icon:'🎃',time:12600,seed:300,sell:460,xp:36,y:[1,1],s:[2]}
 };
 const KEY='farm-proto-1';
 const CLOUD_PREFIX='pocket_farm_save_v1';
@@ -681,7 +682,7 @@ function render(){
   if(tab==='settings'){
     h.textContent='Настройки';
     const th=S.theme||'auto';
-    v.innerHTML=`<p class="lbl">Ник: ${esc(S.nick||'')}</p><input id="nn" class="nick" maxlength="16" placeholder="Новый ник" autocomplete="off" style="margin:0 0 10px"><button class="btn" style="width:100%;padding:12px" data-nick="1">Сменить ник · 1475 🪙</button><p class="lbl" style="margin-top:20px">Тема</p><div class="seeds">${[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(([k,n])=>`<button class="chip ${th===k?'on':''}" data-theme="${k}">${n}</button>`).join('')}</div><a class="btn" data-ext="1" href="https://youtube.com/@pocket_farmland?si=qgeCB45LtzX085ud" target="_blank" rel="noopener noreferrer" style="width:100%;margin-top:16px">▶ YouTube-канал игры</a><button class="btn danger" data-reset="1">Сбросить прогресс</button>`;
+    v.innerHTML=`<p class="lbl">Ник: ${esc(S.nick||'')}</p><input id="nn" class="nick" maxlength="16" placeholder="Новый ник" autocomplete="off" style="margin:0 0 10px"><button class="btn" style="width:100%;padding:12px" data-nick="1">Сменить ник · 1475 🪙</button><p class="lbl" style="margin-top:20px">Тема</p><div class="seeds">${[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(([k,n])=>`<button class="chip ${th===k?'on':''}" data-theme="${k}">${n}</button>`).join('')}</div><a class="btn" data-ext="1" href="https://youtube.com/@pocket_farmland?si=qgeCB45LtzX085ud" target="_blank" rel="noopener noreferrer" style="width:100%;margin-top:16px">▶ YouTube-канал игры</a><button class="btn danger" data-reset="1">Сбросить прогресс</button><div style="text-align:center;opacity:.4;font-size:12px;margin-top:auto;padding:24px 0 8px">Версия: 1.1.2</div>`;
     return;
   }
   if(tab==='gh'&&!S.gh){
@@ -802,30 +803,5 @@ if(cloudUsable&&(!cloudInitial||migrateLocalToCloud||repairPlotsFromLocal||prefe
 addEventListener('error',()=>toast('Что-то пошло не так, попробуй перезайти'));
 })();
 </script>
-
-<style>
-#maintenance-screen{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg,#eef0f4);color:var(--ink,#12161e);font-family:"Nunito",system-ui,sans-serif;text-align:center}
-#maintenance-screen .maintenance-card{width:100%;max-width:420px;padding:30px 22px;border-radius:24px;background:var(--panel,#fff);box-shadow:0 18px 55px rgba(0,0,0,.16);border:1px solid var(--line,rgba(18,22,30,.12))}
-#maintenance-screen .maintenance-icon{font-size:54px;line-height:1;margin-bottom:18px}
-#maintenance-screen h1{font-size:27px;line-height:1.15;margin:0 0 14px;font-weight:800}
-#maintenance-screen p{font-size:16px;line-height:1.5;margin:0 0 20px}
-#maintenance-screen a{display:inline-block;padding:12px 18px;border-radius:14px;background:var(--leaf,#2b4a85);color:#fff;text-decoration:none;font-weight:800}
-#maintenance-screen .maintenance-note{font-size:12px;color:var(--mute,#6a7587);margin-top:16px}
-</style>
-<div id="maintenance-screen" role="dialog" aria-modal="true" aria-labelledby="maintenance-title">
-  <div class="maintenance-card">
-    <div class="maintenance-icon" aria-hidden="true">🛠️</div>
-    <h1 id="maintenance-title">Технический перерыв</h1>
-    <p>Ведутся технические работы, пожалуйста проявите терпение;)</p>
-    <a href="https://t.me/FarmLand_news" target="_blank" rel="noopener noreferrer">Следите за новостями в FarmLand_news</a>
-    <div class="maintenance-note">Pocket FarmLand временно недоступна</div>
-  </div>
-</div>
-<script>
-/* Maintenance lock: keep the game inaccessible until this overlay is removed in a future update. */
-document.documentElement.style.overflow = 'hidden';
-document.body.style.overflow = 'hidden';
-</script>
-
 </body>
 </html>
