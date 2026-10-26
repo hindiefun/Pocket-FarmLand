@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Pocket FarmLand</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16241a;--panel:#1f3024;--ink:#e6f2e6;--soil:#8a6247;--soil2:#74503a;--leaf:#6fbf63;--coin:#f5c451;--mute:#9db5a1;--line:#2f4636}}
 :root[data-theme="dark"]{--bg:#16241a;--panel:#1f3024;--ink:#e6f2e6;--soil:#8a6247;--soil2:#74503a;--leaf:#6fbf63;--coin:#f5c451;--mute:#9db5a1;--line:#2f4636}
 *,*::before,*::after{box-sizing:inherit}
-html,body{height:100%;margin:0}
+html,body{height:100%;margin:0;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,sans-serif;font-weight:600;-webkit-tap-highlight-color:transparent}
 #app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
@@ -209,6 +209,9 @@ button.card{border:0;font:inherit;color:inherit;align-items:center;text-align:ce
 .tk.done{opacity:.6}
 .tk.done .tkr{color:#2e9e5b;font-size:18px}
 .tk.can{box-shadow:inset 0 0 0 2px var(--coin)}
+button.tk{width:100%;border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}button.tk:active{transform:scale(.99)}.tk.can .tkr{color:var(--coin)}
+.thelp{display:flex;justify-content:flex-end;margin:0 0 -6px}.qbtn{width:26px;height:26px;border:0;border-radius:50%;background:var(--panel);color:var(--mute);font:inherit;font-weight:800;font-size:14px;line-height:1;padding:0;box-shadow:inset 0 0 0 1.5px var(--line)}
+.hbox{background:var(--panel);border-radius:14px;padding:12px 14px;margin:10px 0 0;font-size:13px;line-height:1.4;box-shadow:inset 0 0 0 1.5px var(--line)}
 .rth,.rl{display:grid;grid-template-columns:1fr 44px 1fr;gap:8px;align-items:stretch}
 .rth{font-size:12px;font-weight:800;color:var(--mute);text-align:center;margin-bottom:8px}
 .rth .pm{color:var(--coin)}
@@ -243,7 +246,7 @@ button.card{border:0;font:inherit;color:inherit;align-items:center;text-align:ce
 @keyframes fl{to{transform:translate(-50%,-96px);opacity:0}}
 .rw.pop{animation:popc .5s ease-out}
 @keyframes popc{0%{transform:scale(.9)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
-.promos{display:flex;flex-direction:column;gap:12px;margin-bottom:6px}
+.promos{display:flex;gap:12px;margin:0 -2px 6px;padding:2px 2px 8px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}.promos::-webkit-scrollbar{display:none}.promos .pcard{flex:0 0 100%;min-width:0;scroll-snap-align:center}.promodots{display:flex;justify-content:center;gap:6px;margin:-1px 0 12px}.promodots button{width:7px;height:7px;min-width:7px;padding:0;border:0;border-radius:50%;background:var(--line);opacity:.8}.promodots button.on{background:var(--leaf);opacity:1;transform:scale(1.2)}
 .pcd{position:absolute;top:14px;right:14px;font-size:12px;font-weight:800;color:var(--mute)}
 .pcard{position:relative;text-align:center;border-radius:22px;padding:22px 18px 18px;background:radial-gradient(120% 120% at 50% 0%,rgba(246,184,63,.32),transparent 60%),var(--panel);box-shadow:inset 0 0 0 1.5px rgba(246,184,63,.55),0 0 22px rgba(246,184,63,.15)}
 .pbadge{position:absolute;top:14px;left:14px;background:#e0564f;color:#fff;font-weight:800;font-size:13px;padding:4px 10px;border-radius:999px}
@@ -262,6 +265,7 @@ button.card{border:0;font:inherit;color:inherit;align-items:center;text-align:ce
 .pprice b{font-size:30px;color:var(--coin)}
 .pbtn{width:100%;padding:14px;font-size:16px;background:var(--coin);color:#1b1503}
 .pcard small{display:block;color:var(--mute);font-size:12px;margin-top:8px}
+.promos .pcard{display:flex;flex-direction:column}.promos .pcard>.pbtn{margin-top:auto}.promos .pcard>:nth-last-child(2){margin-bottom:14px}
 .story{position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:496px;margin:0 auto;z-index:40;background:var(--panel);border-radius:18px;padding:14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.4),inset 0 0 0 1.5px var(--coin);animation:vin .25s ease-out}
 .st-i{font-size:28px}
 .st-t{flex:1}
@@ -293,6 +297,18 @@ button.card{border:0;font:inherit;color:inherit;align-items:center;text-align:ce
 #toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%}
 #toast.on{opacity:1}
 </style>
+<script>
+/* no-zoom: pinch, double-tap, iOS gestures */
+(function(){
+var o={passive:false};
+['gesturestart','gesturechange','gestureend'].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()},o)});
+document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},o);
+var last=0;
+document.addEventListener('touchend',function(e){var t=Date.now();if(t-last<350&&e.cancelable)e.preventDefault();last=t},o);
+document.addEventListener('dblclick',function(e){e.preventDefault()},o);
+document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},o);
+})();
+</script>
 </head>
 <body>
 <div id="app">
@@ -388,7 +404,7 @@ const MIG={carrot:'potato'};
 while(S.plots.length<15)S.plots.push({u:!!S.gh,c:null,t:0,g:true});
 for(const o of [S.seeds,S.crops]){for(const k in MIG){if(o[k]){o[MIG[k]]=(o[MIG[k]]||0)+o[k];delete o[k]}}}
 S.plots.forEach(p=>{if(MIG[p.c])p.c=MIG[p.c]});if(MIG[S.sel])S.sel=MIG[S.sel];
-let tab=S.reg?(S.gift===false?'intro':'menu'):'welcome',btab='crop',pick=false,selC='',selM='',mper=144,tpick=false,ptab='tasks',pscroll=false;
+let tab=S.reg?(S.gift===false?'intro':'menu'):'welcome',btab='crop',pick=false,selC='',selM='',mper=144,tpick=false,ptab='tasks',pscroll=false,phelp=false;
 const SKINS={classic:'<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 4v40" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M6 22h36" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M16 14h16l-2-6H18z" fill="#d9a441"/><rect x="11" y="13" width="26" height="3" rx="1.5" fill="#d9a441"/><circle cx="24" cy="20" r="4.5" fill="#e8c28a"/><path d="M17 26h14l2 12H15z" fill="#b5503c"/><path d="M6 22l-3 5M42 22l3 5" stroke="#d9a441" stroke-width="2" stroke-linecap="round"/></svg>'};
 SKINS.classic='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 6v38M7 23h34" stroke="#7a5a3a" stroke-width="3" stroke-linecap="round"/><path d="M14 15h20l-3-7H17z" fill="#d6a93f"/><rect x="10" y="14" width="28" height="3" rx="1.5" fill="#b98b2c"/><circle cx="24" cy="21" r="5" fill="#e9c9a0"/><circle cx="22" cy="20" r="1" fill="#222"/><circle cx="26" cy="20" r="1" fill="#222"/><path d="M21.5 23.5q2.5 1.5 5 0" stroke="#222" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M16 27h16l2 11H14z" fill="#3f5f9a"/><rect x="19" y="30" width="5" height="5" rx="1" fill="#d6a93f"/><path d="M6 23l-3 4M6 23l-3-1M42 23l3 4M42 23l3-1" stroke="#d6a93f" stroke-width="2" stroke-linecap="round"/></svg>';
 SKINS.halloween='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 14v30M7 26h34" stroke="#5b4a3a" stroke-width="3" stroke-linecap="round"/><rect x="16" y="2" width="16" height="10" rx="1.5" fill="#1b1b24"/><rect x="16" y="9" width="16" height="2.5" fill="#f28c28"/><rect x="11" y="11" width="26" height="3" rx="1.5" fill="#1b1b24"/><ellipse cx="24" cy="21" rx="7" ry="7.5" fill="#8fbf6a"/><circle cx="21" cy="20" r="2.2" fill="#fff"/><circle cx="27" cy="20" r="2.2" fill="#fff"/><circle cx="21.3" cy="20.3" r="1" fill="#222"/><circle cx="26.6" cy="20" r="1" fill="#222"/><path d="M20 25.5h8" stroke="#2a3a1c" stroke-width="1.2"/><path d="M21 24.5v2M23 24.5v2M25 24.5v2M27 24.5v2" stroke="#2a3a1c" stroke-width=".8"/><path d="M16 30h16l3 11-4-2-3 3-3-3-3 3-3-3-4 2z" fill="#3a2f4d"/><path d="M7 26l-3 4M41 26l3 4" stroke="#8fbf6a" stroke-width="2.6" stroke-linecap="round"/></svg>';
@@ -455,22 +471,55 @@ const SKN={classic:'Классическое',halloween:'Зомби Пугало
 const dayIdx=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5);
 const snap=()=>({h:S.harv,e:S.earned,p:S.np||0,s:S.ns||0,q:S.nq||0});
 const stat=k=>snap()[k];
-const DT=[{k:'h',n:'Собрать 15 ед. урожая',t:15,s:10},{k:'p',n:'Посадить 8 растений',t:8,s:8},{k:'s',n:'Продать 10 ед. урожая',t:10,s:8},{k:'q',n:'Выполнить 1 письмо',t:1,s:12}];
-const WT=[{k:'h',n:'Собрать 80 ед. урожая',t:80,s:40},{k:'e',n:'Заработать 500 монет',t:500,s:40},{k:'q',n:'Выполнить 3 письма',t:3,s:30}];
-const dTasks=()=>{const d=dayIdx();return [0,1,2].map(i=>{const j=(d+i)%4;return{...DT[j],id:'d'+j}})};
+const DT=[{k:'h',n:'Собрать {t} ед. урожая',t:20,s:10},{k:'p',n:'Посадить {t} растений',t:12,s:8},{k:'s',n:'Продать {t} ед. урожая',t:15,s:8},{k:'e',n:'Заработать {t} монет',t:150,s:10},{k:'q',n:'Выполнить {t} письмо',t:1,s:12}];
+const WT=[{k:'h',n:'Собрать {t} ед. урожая',t:100,s:40},{k:'p',n:'Посадить {t} растений',t:60,s:30},{k:'s',n:'Продать {t} ед. урожая',t:80,s:30},{k:'e',n:'Заработать {t} монет',t:800,s:40},{k:'q',n:'Выполнить {t} письма',t:4,s:35}];
+function genTasks(pool,pre){const f=1+0.04*(lvl()-1),a=pool.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,3).map((x,i)=>{const t=x.k==='q'?x.t:Math.max(5,Math.round(x.t*f/5)*5);return{k:x.k,t,s:x.s,n:x.n.replace('{t}',t),id:pre+i}})}
+const dTasks=()=>passInit().d.tasks||[];
 const PL=20,pcum=n=>n*n+15*n,pLvl=()=>{let n=0;const s=(S.pp&&S.pp.stars)||0;while(n<PL&&pcum(n+1)<=s)n++;return n};
 const RWF=['c30','c40','c50','c50','g10','c60','c70','c70','c80','g5','c90','c90','c100','c100','g10','c110','c110','c120','c120','g3'];
 const RWP=['s','c70','g5','c80','c100','c100','g10','c120','c120','c150','c150','g5','c150','c160','c180','c180','g5','c200','c200','c200'];
 function rw(tr,L){const t=(tr==='f'?RWF:RWP)[L-1];if(!t)return[];const k=t[0],n=+t.slice(1);return k==='c'?[{t:'coins',n}]:k==='g'?[{t:'cr',n}]:k==='i'?[{t:'icon',n:1}]:[{t:'skin',n:1}]}
 const rwTxt=a=>a.map(r=>r.t==='skin'?'🎃 Скин':({coins:'🪙',cr:'💎'})[r.t]+' '+r.n).join(' ');
 const ZOM_A=new Date(2026,9,30).getTime(),ZOM_B=new Date(2026,10,8).getTime();
+const seasonalCountdown=()=>Date.now()<ZOM_A?'⏳ Старт через '+dl(ZOM_A-Date.now()):Date.now()<ZOM_B?'⏳ До конца '+dl(ZOM_B-Date.now()):'⏳ Акция завершена';
 const promoWin=()=>Date.now()>=ZOM_A&&Date.now()<ZOM_B;
 const zomOn=()=>promoWin()&&!(S.skins||[]).includes('halloween');
 const pumpOn=()=>promoWin()&&!(S.picons||[]).includes(3);
 const SKH=id=>id==='halloween'?(zomOn()?'Скидка 100% в магазине':Date.now()<ZOM_A?'Акция в магазине с 30 октября':'Акция завершилась'):id==='golden'?'Доступно в Farm Pass Premium':'Недоступно';
-const promoHtml=()=>{if(!zomOn()&&!pumpOn())return '';const cd=`<span class="pcd">⏳ ${dl(ZOM_B-Date.now())}</span>`;return `<div class="sec">🔥 Акции</div><div class="promos">${zomOn()?`<div class="pcard"><span class="pbadge">СКИДКА 100%</span>${cd}<div class="big">${SKINS.halloween}</div><div class="ptit">Зомби Пугало</div><div class="psub">Хэллоуинский скин для пугала</div><button class="btn pbtn" data-zom="1">Забрать</button></div>`:''}${pumpOn()?`<div class="pcard">${cd}<div class="pic2">🎃</div><div class="ptit">Иконка «Тыква»</div><div class="psub">Новая иконка профиля</div><div class="pprice"><b>15 💎</b></div><button class="btn pbtn" data-pump="1" ${(S.cr||0)<15?'disabled':''}>Купить · 15 💎</button></div>`:''}</div><div class="sec">Семена</div>`};
+const GEM_OFFER_MS=24*60*60*1000;
+const gemWeekStart=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()};
+function ensureGemOffer(){
+  const now=Date.now();let p=S.gemPromo;
+  if(p&&p.activeUntil>now)return p;
+  if(!p||p.week!==gemWeekStart()){
+    const week=gemWeekStart(),weekEnd=week+7*864e5,maxStart=weekEnd-GEM_OFFER_MS,first=Math.max(now+60000,week+60000),count=Math.random()<.5?1:2,slots=[];
+    if(first<=maxStart){
+      if(count===2&&maxStart-first>=48*3600000){const aMax=maxStart-24*3600000;const a=first+Math.random()*(aMax-first);const b=a+24*3600000+Math.random()*(maxStart-a-24*3600000);slots.push(Math.floor(a),Math.floor(b))}
+      else slots.push(Math.floor(first+Math.random()*(maxStart-first||1)));
+    }
+    p=S.gemPromo={week,slots,activeStart:0,activeUntil:0,used:[]};save();
+  }
+  if(p.activeUntil&&p.activeUntil<=now){p.used=p.used||[];const us=p.activeSlot||p.activeStart;if(us&&!p.used.includes(us))p.used.push(us);p.activeStart=0;p.activeSlot=0;p.activeUntil=0;save()}
+  p.used=p.used||[];p.slots=p.slots||[];
+  const start=p.slots.find(t=>now>=t&&!p.used.includes(t));
+  if(start){p.activeSlot=start;p.activeStart=now;p.activeUntil=now+GEM_OFFER_MS;save()}
+  return p.activeUntil>now?p:null;
+}
+const promoHtml=()=>{
+  const offer=ensureGemOffer();
+  const cd=`<span class="pcd">${seasonalCountdown()}</span>`;
+  const cards=[];
+  if(offer)cards.push(`<div class="pcard"><span class="pbadge">СКИДКА 24%</span><span class="pcd">⏳ ${dl(offer.activeUntil-Date.now())}</span><div class="pic2">💎</div><div class="ptit">Кристаллы 50x</div><button class="btn pbtn" type="button" data-gemoffer="1">125 ⭐</button></div>`);
+  if(zomOn())cards.push(`<div class="pcard"><span class="pbadge">СКИДКА 100%</span>${cd}<div class="big">${SKINS.halloween}</div><div class="ptit">Зомби Пугало</div><div class="psub">Хэллоуинский скин для пугала</div><button class="btn pbtn" type="button" data-zom="1">Забрать</button></div>`);
+  if(pumpOn())cards.push(`<div class="pcard">${cd}<div class="pic2">🎃</div><div class="ptit">Иконка «Тыква»</div><div class="psub">Новая иконка профиля</div><div class="pprice"><b>15 💎</b></div><button class="btn pbtn" type="button" data-pump="1">15 💎</button></div>`);
+  if(!cards.length)return '<div class="sec">Семена</div>';
+  const dots=cards.length>1?`<div class="promodots" aria-label="Страницы акций">${cards.map((_,i)=>`<button type="button" class="${i===0?'on':''}" data-promodot="${i}" aria-label="Акция ${i+1}"></button>`).join('')}</div>`:'';
+  return `<div class="sec">🔥 Акции</div><div class="promos" id="promos">${cards.join('')}</div>${dots}<div class="sec">Семена</div>`;
+};
+
 const PAY_API='';
-const PACKS=[{id:'gems30',n:30,st:99},{id:'gems120',n:120,st:199},{id:'gems300',n:300,st:299}];
+const PACKS=[{id:'gems30',n:30,st:99},{id:'gems50',n:50,st:125},{id:'gems120',n:120,st:199},{id:'gems300',n:300,st:299}];
+const SHOP_PACKS=PACKS.filter(k=>k.id!=='gems50');
 async function payPost(path,body){const r=await fetch(PAY_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,...body})});return r.json()}
 async function claimPaid(){if(!PAY_API||!TG||!TG.initData)return;try{const j=await payPost('/claim',{}),ids=[];(j.items||[]).forEach(it=>{ids.push(it.id);S.paid=S.paid||{};if(S.paid[it.id])return;S.paid[it.id]=1;if(it.product==='premium')passInit().prem=true;else{const k=PACKS.find(x=>x.id===it.product);if(k)S.cr=(S.cr||0)+k.n}toast('Покупка получена ✓')});if(ids.length){save();render();payPost('/ack',{ids}).catch(()=>{})}}catch(e){}}
 async function pay(prod){if(!PAY_API||!TG||!TG.openInvoice){toast('Оплата Stars заработает внутри Telegram после подключения бота');return}try{const j=await payPost('/invoice',{product:prod});if(!j.link)throw 0;TG.openInvoice(j.link,st=>{if(st==='paid'){setTimeout(claimPaid,800);setTimeout(claimPaid,4000)}else if(st==='failed')toast('Оплата не прошла')})}catch(e){toast('Не удалось создать счёт, попробуй позже')}}
@@ -479,30 +528,31 @@ const WHO=['Мэр','Кафе на площади','Соседка','Детск�
 function fly(t,e){const s=document.createElement('span');s.className='fly';s.textContent=t;s.style.left=((e&&e.clientX)||innerWidth/2)+'px';s.style.top=((e&&e.clientY)||innerHeight/2)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1000)}
 function story(title,share){const old=document.getElementById('story');if(old)old.remove();const el=document.createElement('div');el.id='story';el.className='story';el.innerHTML=`<span class="st-i">🎉</span><div class="st-t"><b>${esc(title)}</b><small>Достижение разблокировано</small></div><a class="btn" data-story="1" data-text="${esc(share)}" href="https://t.me/share/url?url=${encodeURIComponent('https://t.me/pocketfarmland_bot')}&text=${encodeURIComponent(share)}" target="_blank" rel="noopener noreferrer">Похвастаться в Telegram</a><button class="st-x" aria-label="Закрыть">✕</button>`;document.body.appendChild(el);el.querySelector('.st-x').onclick=()=>el.remove();setTimeout(()=>el.remove(),14000)}
 function passInit(){if(!S.pp)S.pp={v:4,st:Date.now(),stars:0,cl:{f:[],p:[]},prem:false,d:{},w:{}};return S.pp}
-function passCheck(){const P=passInit(),di=dayIdx(),wi=Math.floor(di/7);
-  if(P.d.day!==di)P.d={day:di,base:snap(),done:[]};
-  if(P.w.wk!==wi)P.w={wk:wi,base:snap(),done:[]};
-  if(Date.now()>P.st+28*864e5)return;
-  const l0=pLvl();
-  dTasks().forEach(t=>{if(stat(t.k)-P.d.base[t.k]>=t.t&&!P.d.done.includes(t.id)){P.d.done.push(t.id);P.stars+=t.s;toast('Farm Pass: +'+t.s+' 🌟')}});
-  WT.forEach((t,i)=>{const id='w'+i;if(stat(t.k)-P.w.base[t.k]>=t.t&&!P.w.done.includes(id)){P.w.done.push(id);P.stars+=t.s;toast('Farm Pass: +'+t.s+' 🌟')}});
-  if(pLvl()>l0)setTimeout(()=>toast('Farm Pass: уровень '+pLvl()+'!'),1500);
+function passCheck(){const P=passInit(),di=dayIdx(),wi=Math.floor((di+3)/7);
+  if(P.d.day!==di)P.d={day:di,base:snap(),done:[],tasks:genTasks(DT,'dt')};else if(!P.d.tasks)P.d.tasks=genTasks(DT,'dt');
+  if(P.w.wk!==wi)P.w={wk:wi,base:snap(),done:[],tasks:genTasks(WT,'wt')};else if(!P.w.tasks)P.w.tasks=genTasks(WT,'wt');
 }
+function claimTask(id){const P=passInit();if(Date.now()>P.st+28*864e5){toast('Сезон завершён');return}passCheck();
+  const per=id[0]==='w'?P.w:P.d,t=(per.tasks||[]).find(x=>x.id===id);
+  if(!t||per.done.includes(id))return;if(stat(t.k)-per.base[t.k]<t.t){toast('Задание ещё не выполнено');return}
+  const l0=pLvl();per.done.push(id);P.stars+=t.s;toast('Farm Pass: +'+t.s+' 🌟');if(pLvl()>l0)setTimeout(()=>toast('Farm Pass: уровень '+pLvl()+'!'),1500);return '+ '+t.s+' 🌟'}
 function claim(tr,L){const P=passInit(),k=tr==='f'?'f':'p';if(L>pLvl()){toast('Уровень ещё не достигнут');return}if(k==='p'&&!premOk()){toast('Нужен Premium');return}if(P.cl[k].includes(L))return;P.cl[k].push(L);for(const r of rw(tr,L)){if(r.t==='coins')S.coins+=r.n;else if(r.t==='cr')S.cr=(S.cr||0)+r.n;else if(r.t==='skin'){S.skins=S.skins||[];if(!S.skins.includes('golden'))S.skins.push('golden')}else if(r.t==='icon'){S.picons=S.picons||[];if(!S.picons.includes(3))S.picons.push(3)}}toast('Награда получена');return '+ '+rw(tr,L).map(x=>x.t==='skin'?'🌾 скин':x.t==='icon'?'🎃 иконка':IC[x.t]+' '+x.n).join(' ')}
 const taskRow=(t,per)=>{const pr=Math.min(t.t,stat(t.k)-per.base[t.k]),dn=per.done.includes(t.id);return `<div class="row"><div class="t">${t.n}<small>${pr}/${t.t} · +${t.s} 🌟</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr/t.t*100}%"></i></div></div><span>${dn?'✓':''}</span></div>`};
 const pcell=(tr,i,L,P)=>{const k=tr==='f'?'f':'p',cl=P.cl[k].includes(i),can=i<=L&&(k==='f'||P.prem)&&!cl;return `<button class="pc${cl?' got':''}${can?' can':''}${k==='p'&&!P.prem?' pl':''}" data-pc="${tr}:${i}">${rwTxt(rw(tr,i))}${cl?' ✓':i>L?' 🔒':''}</button>`};
 const IC={coins:'🪙',cr:'💎'};
 const TI={h:'🧺',p:'🌱',s:'🪙',q:'✉️',e:'💰'};
-const tk=(t,per)=>{const pr=Math.min(t.t,stat(t.k)-per.base[t.k]),dn=per.done.includes(t.id);return `<div class="tk${dn?' done':''}"><span class="tki">${TI[t.k]}</span><div class="tkm"><b>${t.n}</b><small>${dn?'Награда получена':'Прогресс '+pr+' из '+t.t}</small><div class="bar2"><i style="width:${pr/t.t*100}%"></i></div></div><span class="tkr">${dn?'✓':'+'+t.s+' 🌟'}</span></div>`};
+const tk=(t,per)=>{const pr=Math.min(t.t,stat(t.k)-per.base[t.k]),dn=per.done.includes(t.id),rd=!dn&&pr>=t.t,tag=rd?'button':'div';return `<${tag} class="tk${dn?' done':''}${rd?' can':''}"${rd?` data-tc="${t.id}"`:''}><span class="tki">${TI[t.k]}</span><div class="tkm"><b>${t.n}</b><small>${dn?'Награда получена':rd?'Выполнено! Нажми, чтобы забрать':'Прогресс '+pr+' из '+t.t}</small><div class="bar2"><i style="width:${pr/t.t*100}%"></i></div></div><span class="tkr">${dn?'✓':rd?'Забрать +'+t.s+' 🌟':'+'+t.s+' 🌟'}</span></${tag}>`};
 const rcard=(tr,i,L,P)=>{const k=tr==='f'?'f':'p',cl=P.cl[k].includes(i),pr=k==='p'&&!premOk(),can=i<=L&&!pr&&!cl,r=rw(tr,i),st=cl?'Получено':can?'Забрать':pr?'Premium':i>L?'Закрыто':'';return `<button class="rw ${k}${cl?' got':''}${window.justPc===tr+':'+i?' pop':''}${can?' can':''}${i>L||pr?' lk':''}" data-pc="${tr}:${i}"><div class="rwl">${r.map(x=>`<span>${x.t==='skin'?'🌾':x.t==='icon'?'🎃':IC[x.t]}<b>${x.t==='skin'?'Скин пугала':x.t==='icon'?'Иконка':x.n}</b></span>`).join('')}</div><small>${st}</small></button>`};
 function checkAch(){passCheck();S.al=S.al||{};for(const k in AT){const L=alv(k);if(S.al[k]===undefined){S.al[k]=L;continue}if(L>S.al[k]){S.al[k]=L;toast('Достижение: '+AT[k].name+' '+R[L]+'!');if(L===3){const t=TITLES.find(x=>x.k===k);if(t)setTimeout(()=>toast('Новый титул: '+t.n),1800)}if(L===3)story(AT[k].name+' '+R[L],'Я получил достижение «'+AT[k].name+' '+R[L]+'» в Pocket FarmLand! Играть: @pocketfarmland_bot');}}}
 const scareHtml=()=>{const w=S.sc.w;return `<div class="scare"><button class="sc ${w>0?'':'off'}" data-scare="1">${SKINS[(S.skins||[]).includes(S.sc.skin)?S.sc.skin:'classic']}</button><div class="sw"><div class="bar2"><i style="width:${w}%"></i></div><small>${w>0?'Пугало: '+w+'%':(S.sc.own?'Пугало сломалось':'Пугала нет')}</small></div>${w>0?'':`<button class="btn" data-buyscare="1">Купить · ${SC} 🪙</button>`}</div>`};
 function tick(){
+  const gemOffer=ensureGemOffer(),gemOfferActive=!!gemOffer;
+  if(tick.gemOfferActive!==gemOfferActive){tick.gemOfferActive=gemOfferActive;if(tab==='shop')render()}
   if(!S.nr)S.nr=Date.now()+300000;
   if(S.reg&&S.gift!==false){
     const passBefore=JSON.stringify(S.pp||null);
     passCheck();
-    if(JSON.stringify(S.pp||null)!==passBefore)save();
+    if(JSON.stringify(S.pp||null)!==passBefore){save();if(tab==='pass')render()}
   }
   if(S.reg&&S.gift!==false){const now=Date.now(),gap=()=>(12+Math.random()*12)*36e5;if(!S.qn)S.qn=now+gap();let add=0;while(S.q.length<3&&now>=S.qn){S.q.push(newQuest());S.qn+=gap();add++}if(S.q.length>=3&&now>=S.qn)S.qn=now+gap();if(add){save();toast('Новое письмо ✉️')}}
   if(Date.now()>S.nr){
@@ -541,7 +591,7 @@ function save(){
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
 function unlockedCount(){return S.plots.filter(p=>p.u&&!p.g).length}
-function unlockCost(){return 40*(unlockedCount()-3)}
+function unlockCost(){return 250*(unlockedCount()-3)}
 function have(id){return S.seeds[id]||0}
 
 function render(){
@@ -594,7 +644,8 @@ function render(){
     const P=S.pp,L=pLvl(),left=P.st+28*864e5-Date.now(),cur=pcum(L),pr=L<PL?Math.round((P.stars-cur)/(pcum(L+1)-cur)*100):100;
     let html=`<div class="ph"><div class="ph-top"><div><div class="ph-k">FARM PASS</div><div class="ph-t">Новое начало</div><div class="ph-s">Сезон 1 · ${left>0?'до конца '+dl(left):'сезон завершён'}</div></div><div class="ph-lv"><b>${L}</b><span>уровень</span></div></div><div class="ph-bar"><i style="width:${pr}%"></i></div><div class="ph-row"><span>🌟 ${P.stars}</span><span>${L<PL?'до уровня '+(L+1)+': ещё '+(pcum(L+1)-P.stars):'максимальный уровень'}</span></div>${premOk()?'<div class="ph-prem on">👑 Premium активен до конца сезона</div>':(left>0?'<button class="ph-prem" data-buyprem="1">👑 Открыть Premium · 250 ⭐ Stars</button>':'<div class="ph-prem on">Premium закончился вместе с сезоном</div>')}</div><div class="seg"><button class="${ptab==='tasks'?'on':''}" data-ptab="tasks">Задания</button><button class="${ptab==='rew'?'on':''}" data-ptab="rew">Награды</button></div>`;
     if(ptab==='tasks'){
-      html+='<div class="sec">Ежедневные</div>'+dTasks().map(t=>tk(t,P.d)).join('')+'<div class="sec">Еженедельные</div>'+WT.map((t,i)=>tk({...t,id:'w'+i},P.w)).join('');
+      html+=`<div class="thelp"><button class="qbtn" data-phelp="1" aria-label="Что это?">?</button></div>${phelp?'<div class="hbox">Выполняй задания и получай звёзды, за которые можно открывать награды!</div>':''}`;
+      html+='<div class="sec">Ежедневные</div>'+dTasks().map(t=>tk(t,P.d)).join('')+'<div class="sec">Еженедельные</div>'+(P.w.tasks||[]).map(t=>tk(t,P.w)).join('');
     }else{
       html+='<div class="rth"><span>Обычная</span><span></span><span class="pm">Premium 👑</span></div>';
       for(let i=1;i<=PL;i++)html+=`<div class="rl${i<=L?' reach':''}${i===L?' cur':''}${i===L+1?' nxt':''}"${i===Math.max(L,1)?' id="pcur"':''}>${rcard('f',i,L,P)}<div class="rn"><b>${i}</b></div>${rcard('p',i,L,P)}</div>`;
@@ -630,7 +681,7 @@ function render(){
     v.innerHTML='<div class="field">'+html+'</div>'+(tab==='gh'?'<button class="btn ghb" data-go="field">🌱 На огород</button>':'<button class="btn ghb" data-go="gh">🌿 Теплица</button>')+sh+'</div>';
   }else if(tab==='shop'){
     h.textContent='Магазин';
-    v.innerHTML=promoHtml()+'<div class="cards">'+Object.entries(CROPS).map(([id,c])=>{const ok=canBuy(id),mx=have(id)>=15;return `<div class="card${ok?'':' lockrow'}"><span class="ic">${c.icon}</span><b>${c.name}</b><p>${DESC[id]}</p><small>${ok?'Растёт '+fmt(c.time)+' · запас '+have(id)+'/15':'Доступно: '+snames(id)}</small><button class="btn" data-buy="${id}" ${(S.coins<c.seed||!ok||mx)?'disabled':''}>${!ok?'🔒':mx?'Максимум':c.seed+' 🪙'}</button></div>`}).join('')+'</div><div class="sec">Кристаллы</div><div class="packs">'+PACKS.map(k=>`<button class="pk" data-pay="${k.id}"><span class="pk-i">💎</span><b>${k.n}</b><small>${k.st} ⭐</small></button>`).join('')+'</div>';
+    v.innerHTML=promoHtml()+'<div class="cards">'+Object.entries(CROPS).map(([id,c])=>{const ok=canBuy(id),mx=have(id)>=15;return `<div class="card${ok?'':' lockrow'}"><span class="ic">${c.icon}</span><b>${c.name}</b><p>${DESC[id]}</p><small>${ok?'Растёт '+fmt(c.time)+' · запас '+have(id)+'/15':'Доступно: '+snames(id)}</small><button class="btn" data-buy="${id}" ${(S.coins<c.seed||!ok||mx)?'disabled':''}>${!ok?'🔒':mx?'Максимум':c.seed+' 🪙'}</button></div>`}).join('')+'</div><div class="sec">Кристаллы</div><div class="packs">'+SHOP_PACKS.map(k=>`<button class="pk" data-pay="${k.id}"><span class="pk-i">💎</span><b>${k.n}</b><small>${k.st} ⭐</small></button>`).join('')+'</div>';
   }else if(btab==='mkt'){
     h.textContent='Рынок';
     const nw=newsList(nowK()).slice(0,4);
@@ -653,9 +704,11 @@ function render(){
 }
 
 document.querySelector('header').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){tab=b.dataset.go;render()}});
+document.getElementById('view').addEventListener('scroll',e=>{const rail=e.target;if(rail&&rail.id==='promos'){const i=Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth));rail.parentElement.querySelectorAll('[data-promodot]').forEach((d,j)=>d.classList.toggle('on',j===i))}},true);
 document.getElementById('view').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.go){tab=d.go;render();return}
+  else if(d.promodot!==undefined){const rail=document.getElementById('promos');if(rail){const i=+d.promodot;const card=rail.querySelectorAll('.pcard')[i];if(card)card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});rail.querySelectorAll('.pcard').forEach((c,j)=>{const dot=document.querySelector('[data-promodot="'+j+'"]');if(dot)dot.classList.toggle('on',j===i)})}return}
   else if(d.tg){const u='https://t.me/FarmLand_news';if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}
   else if(d.theme){S.theme=d.theme;applyTheme()}
   else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;b.textContent='Сбрасываем…';(async()=>{try{await cloudWriteQueue;await clearCloud();try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(err){b.disabled=false;b.textContent='Сбросить прогресс';window.rs=0;toast('Не удалось очистить облачное сохранение. Попробуй ещё раз внутри Telegram.');console.error(err)}})();return}
@@ -667,9 +720,12 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.nick){const n=(document.getElementById('nn').value||'').trim();if(n.length<2){toast('Ник: минимум 2 символа');return}if(S.coins<1475){toast('Нужно 1475 монет');return}S.coins-=1475;S.nick=n;toast('Ник изменён')}
   else if(d.gift){S.gift=true;S.coins+=150;S.qn=Date.now()+18e5;tab='menu';toast('Получено: 150 монет');fly('+150 🪙',e)}
   else if(d.ptab){ptab=d.ptab;pscroll=true}
+  else if(d.phelp){phelp=!phelp}
+  else if(d.tc){const t=claimTask(d.tc);if(t)fly(t,e)}
   else if(d.pc){const a=d.pc.split(':');window.justPc=d.pc;setTimeout(()=>{window.justPc=''},700);const t=claim(a[0],+a[1]);if(t)fly(t,e)}
   else if(d.buyprem){pay('premium');return}
   else if(d.pay){pay(d.pay);return}
+  else if(d.gemoffer){const offer=ensureGemOffer();if(offer&&offer.activeUntil>Date.now()){pay('gems50');return}else{toast('Акция уже завершилась');render();return}}
   else if(d.pump){if(pumpOn()&&(S.cr||0)>=15){S.cr-=15;S.picons=S.picons||[];if(!S.picons.includes(3))S.picons.push(3);toast('Получена иконка 🎃');fly('🎃 Иконка',e)}else{toast('Не хватает кристаллов');return}}
   else if(d.zom){if(zomOn()){S.skins=S.skins||[];if(!S.skins.includes('halloween'))S.skins.push('halloween');toast('Получен скин «Зомби Пугало»');fly('🧟 Скин',e)}}
   else if(d.skin){S.sc.skin=d.skin==='classic'?'':d.skin}
