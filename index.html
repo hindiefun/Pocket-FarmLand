@@ -303,8 +303,6 @@ button.tk{width:100%;border:0;font:inherit;color:inherit;text-align:left;cursor:
 var o={passive:false};
 ['gesturestart','gesturechange','gestureend'].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()},o)});
 document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},o);
-var last=0;
-document.addEventListener('touchend',function(e){var t=Date.now();if(t-last<350&&e.cancelable)e.preventDefault();last=t},o);
 document.addEventListener('dblclick',function(e){e.preventDefault()},o);
 document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},o);
 })();
@@ -321,12 +319,12 @@ document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},o
 <script>
 (async function pocketFarmBootstrap(){
 const CROPS={
-  potato:{name:'Картошка',icon:'🥔',time:300,seed:25,sell:10,xp:1,y:[1,4],s:[0,2]},
-  wheat:{name:'Пшеница',icon:'🌾',time:900,seed:55,sell:65,xp:3,y:[1,3],s:[3,0]},
-  corn:{name:'Кукуруза',icon:'🌽',time:2400,seed:90,sell:75,xp:8,y:[1,2],s:[1,2]},
-  tomato:{name:'Помидор',icon:'🍅',time:3600,seed:155,sell:125,xp:12,y:[1,3],s:[1]},
-  berry:{name:'Клубника',icon:'🍓',time:5400,seed:215,sell:175,xp:18,y:[1,4],s:[0,1]},
-  pumpkin:{name:'Тыква',icon:'🎃',time:10800,seed:380,sell:460,xp:36,y:[1,2],s:[2]}
+  potato:{name:'Картошка',icon:'🥔',time:600,seed:20,sell:12,xp:1,y:[2,4],s:[0,2]},
+  wheat:{name:'Пшеница',icon:'🌾',time:1500,seed:45,sell:55,xp:3,y:[1,2],s:[3,0]},
+  corn:{name:'Кукуруза',icon:'🌽',time:3000,seed:75,sell:100,xp:8,y:[1,2],s:[1,2]},
+  tomato:{name:'Помидор',icon:'🍅',time:4500,seed:120,sell:160,xp:12,y:[1,2],s:[1]},
+  berry:{name:'Клубника',icon:'🍓',time:6600,seed:175,sell:245,xp:18,y:[1,2],s:[0,1]},
+  pumpkin:{name:'Тыква',icon:'🎃',time:12600,seed:300,sell:460,xp:36,y:[1,2],s:[2]}
 };
 const KEY='farm-proto-1';
 const CLOUD_PREFIX='pocket_farm_save_v1';
@@ -349,6 +347,7 @@ async function readCloud(){
     const parsed=JSON.parse(parts.join(''));
     if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.plots)||typeof parsed.coins!=='number')throw new Error('Invalid cloud save');
     lastCloudUpdated=Number(meta.updated)||0;
+    cloudCache={};cloudCount=meta.count;parts.forEach((x,i)=>{cloudCache[CLOUD_CHUNK+i]=x});
     // Keep the field state in its own versioned key as well. This protects planted
     // crops and plot unlocks from being lost if a large save is partially updated.
     try{
@@ -358,22 +357,44 @@ async function readCloud(){
     return parsed;
   }catch(e){cloudUsable=false;console.warn('Telegram CloudStorage load failed:',e);return null}
 }
-async function writeCloud(snapshot){
+let cloudCache={},cloudCount=0,cloudEpoch=0,cloudPending=null,cloudBusy=false,lastSnap=null;
+const cloudParts=raw=>{const size=3000,parts=[];for(let i=0;i<raw.length;i+=size)parts.push(raw.slice(i,i+size));if(!parts.length)parts.push(raw);return parts};
+// Slow, safe write (one request after another). Writes only chunks that changed.
+async function writeCloud(snapshot,epoch){
   if(!cloudUsable||!cloudApi)return;
-  const raw=JSON.stringify(snapshot),size=3000,parts=[];
-  for(let i=0;i<raw.length;i+=size)parts.push(raw.slice(i,i+size));
-  if(!parts.length)parts.push(raw);
+  const parts=cloudParts(JSON.stringify(snapshot));
   if(parts.length>100)throw new Error('Сохранение слишком большое');
-  const updated=Math.max(Date.now(),lastCloudUpdated+1);
-  // Write plots independently too, then publish the matching version in metadata
-  // only after the full save is in place. Readers ignore mismatched versions.
+  const updated=Math.max(snapshot._ts||Date.now(),lastCloudUpdated+1),alive=()=>epoch===cloudEpoch;
+  if(!alive())return;
   if(Array.isArray(snapshot.plots))await cloudCall('setItem',CLOUD_PLOTS,JSON.stringify({updated,plots:snapshot.plots}));
-  for(let i=0;i<parts.length;i++)await cloudCall('setItem',CLOUD_CHUNK+i,parts[i]);
+  for(let i=0;i<parts.length;i++){if(!alive())return;const k=CLOUD_CHUNK+i;if(cloudCache[k]!==parts[i]){await cloudCall('setItem',k,parts[i]);cloudCache[k]=parts[i]}}
+  if(!alive())return;
   await cloudCall('setItem',CLOUD_META,JSON.stringify({version:2,count:parts.length,updated}));
   lastCloudUpdated=updated;
-  for(let i=parts.length;i<100;i++){try{const old=await cloudCall('getItem',CLOUD_CHUNK+i);if(old===undefined||old===null||old==='')break;await cloudCall('removeItem',CLOUD_CHUNK+i)}catch(e){break}}
+  for(let i=parts.length;i<cloudCount;i++){try{await cloudCall('removeItem',CLOUD_CHUNK+i);delete cloudCache[CLOUD_CHUNK+i]}catch(e){break}}
+  cloudCount=parts.length;
 }
 let cloudWriteQueue=Promise.resolve();
+// Coalescing queue: only the newest state is ever written, so it never falls behind.
+function queueCloud(copy){
+  cloudPending=copy;if(cloudBusy)return;cloudBusy=true;
+  cloudWriteQueue=(async()=>{try{while(cloudPending){const c=cloudPending;cloudPending=null;await writeCloud(c,cloudEpoch)}}
+    catch(e){cloudCache={};console.warn('Telegram CloudStorage save failed:',e);if(!save.cloudWarn){save.cloudWarn=1;toast('Облако не отвечает; прогресс сохранён локально, повторю позже')}setTimeout(()=>{if(cloudPending&&!cloudBusy)queueCloud(cloudPending)},5000);if(!cloudPending)setTimeout(()=>{if(lastSnap&&!cloudBusy&&!cloudPending)queueCloud(lastSnap)},5000)}
+    finally{cloudBusy=false}})();
+}
+// Fast write for the moment the player leaves: all requests are sent at once, without waiting for answers.
+function flushCloudNow(){
+  if(window.resetting||!lastSnap||!cloudUsable||!cloudApi)return;
+  cloudEpoch++;cloudPending=null;
+  try{
+    const snap=lastSnap,parts=cloudParts(JSON.stringify(snap));if(parts.length>100)return;
+    const updated=Math.max(snap._ts||Date.now(),lastCloudUpdated+1),put=(k,v)=>{try{cloudApi.setItem(k,v,(err,ok)=>{if(!err&&ok!==false)cloudCache[k]=v})}catch(e){}};
+    if(Array.isArray(snap.plots))put(CLOUD_PLOTS,JSON.stringify({updated,plots:snap.plots}));
+    parts.forEach((x,i)=>{if(cloudCache[CLOUD_CHUNK+i]!==x)put(CLOUD_CHUNK+i,x)});
+    put(CLOUD_META,JSON.stringify({version:2,count:parts.length,updated}));
+    lastCloudUpdated=updated;cloudCount=Math.max(cloudCount,parts.length);
+  }catch(e){console.warn('Cloud flush failed:',e)}
+}
 async function clearCloud(){
   if(!cloudApi)return;
   if(!cloudUsable){try{await cloudCall('getItem',CLOUD_META);cloudUsable=true}catch(e){throw new Error('CloudStorage недоступен для сброса')}}
@@ -397,7 +418,9 @@ const repairPlotsFromLocal=!!(cloudInitial&&localInitial&&Array.isArray(cloudIni
   // avoids resurrecting plants lost to crows, season changes, or later actions.
   &&JSON.stringify(cloudWithoutPlots)===JSON.stringify(localWithoutPlots));
 if(repairPlotsFromLocal)cloudInitial.plots=localInitial.plots.map(p=>({...p}));
-let S=cloudInitial||localInitial||{coins:0,seeds:{},crops:{},sel:'',plots:Array.from({length:9},(_,i)=>({u:i<4,c:null,t:0}))};
+const cloudTs=cloudInitial?(Number(cloudInitial._ts)||lastCloudUpdated||0):0,localTs=localInitial?(Number(localInitial._ts)||0):0;
+const preferLocal=!!(cloudInitial&&localInitial&&localTs>cloudTs);
+let S=(preferLocal?localInitial:cloudInitial)||localInitial||{coins:0,seeds:{},crops:{},sel:'',plots:Array.from({length:9},(_,i)=>({u:i<4,c:null,t:0}))};
 const migrateLocalToCloud=!cloudInitial&&!!localInitial&&cloudUsable;
 S.harv=S.harv||0;S.earned=S.earned||0;S.ach=S.ach||{};S.sc=S.sc||{w:0,n:0};S.xp=S.xp||0;S.q=S.q||[];if(S.pp&&S.pp.v!==4){S.pp=undefined;S.skins=[];S.picons=[];S.sc.skin='';if(S.icon>2)S.icon=0}if(S.reg&&!S.rd)S.rd=Date.now();
 const MIG={carrot:'potato'};
@@ -461,7 +484,7 @@ const AT={gold:{icon:'🏆',name:'Золотой урожай',verb:'собра�
 const R=['','I','II','III'];
 const alv=k=>AT[k].lv.filter(n=>AT[k].get()>=n).length;
 const TITLES=[{id:'gold3',k:'gold',n:'Хозяин полей',ok:()=>alv('gold')>=3},{id:'mag3',k:'mag',n:'Предприниматель',ok:()=>alv('mag')>=3}];
-const DESC={potato:'Неприхотливая классика. Быстро растёт и даёт до 4 клубней.',wheat:'Переносит холода. Зерно для мельницы и пекарни.',corn:'Любит тёплое лето. Даёт немного, но крупные початки.',tomato:'Сочный летний овощ. Растёт дольше картошки.',berry:'Сладкая ягода: с одного куста можно собрать до 4 штук.',pumpkin:'Растёт медленно, зато самая крупная. Осенью её ждут особенно.'};
+const DESC={potato:'Неприхотливая классика. Быстро растёт и даёт до 4 клубней.',wheat:'Переносит холода. Зерно для мельницы и пекарни.',corn:'Любит тёплое лето. Даёт немного, но крупные початки.',tomato:'Сочный летний овощ. Растёт дольше картошки.',berry:'Сладкая и дорогая ягода. Растёт дольше помидора, зато ценится выше.',pumpkin:'Растёт медленно, зато самая крупная. Осенью её ждут особенно.'};
 const vetOk=()=>!!S.rd&&S.rd<Date.UTC(2027,0,1)&&Date.now()>=S.rd+365*864e5;
 const medalHtml=()=>vetOk()?`<button class="ach" data-medal="vet"><span class="ic">🎖️</span></button>`:'<div class="slot"></div>';
 const titleHtml=()=>{const un=TITLES.filter(t=>t.ok()),cur=TITLES.find(t=>t.id===S.title&&t.ok());return (cur?`<div class="gold">${cur.n}</div>`:'')+'<button class="tplus" data-tplus="1" aria-label="Титулы">+</button>'+(tpick?`<div class="seeds">${un.map(t=>`<button class="chip${S.title===t.id?' on':''}" data-title="${t.id}">${t.n}</button>`).join('')}<button class="chip" data-title="">Без титула</button></div>`:'')};
@@ -582,12 +605,13 @@ function applyTheme(){const r=document.documentElement;const t=(S.theme==='light
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
 function save(){
+  if(window.resetting)return;
   let snapshot;
   try{
-    const stateToSave={...S,plots:Array.isArray(S.plots)?S.plots.map(p=>({...p})):[]};
+    save.ts=Math.max(Date.now(),(save.ts||0)+1);const stateToSave={...S,plots:Array.isArray(S.plots)?S.plots.map(p=>({...p})):[],_ts:save.ts};
     snapshot=JSON.stringify(stateToSave);localStorage.setItem(KEY,snapshot)
   }catch(e){if(!save.w){save.w=1;toast('Прогресс не сохраняется: хранилище недоступно')}return}
-  if(cloudUsable&&cloudApi){const copy=JSON.parse(snapshot);cloudWriteQueue=cloudWriteQueue.then(()=>writeCloud(copy)).catch(e=>{cloudUsable=false;if(!save.cloudWarn){save.cloudWarn=1;console.warn('Telegram CloudStorage save failed:',e);toast('Облачное сохранение недоступно; прогресс сохранён локально')}})}
+  lastSnap=JSON.parse(snapshot);if(cloudUsable&&cloudApi)queueCloud(lastSnap)
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
 function unlockedCount(){return S.plots.filter(p=>p.u&&!p.g).length}
@@ -711,7 +735,7 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.promodot!==undefined){const rail=document.getElementById('promos');if(rail){const i=+d.promodot;const card=rail.querySelectorAll('.pcard')[i];if(card)card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});rail.querySelectorAll('.pcard').forEach((c,j)=>{const dot=document.querySelector('[data-promodot="'+j+'"]');if(dot)dot.classList.toggle('on',j===i)})}return}
   else if(d.tg){const u='https://t.me/FarmLand_news';if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}
   else if(d.theme){S.theme=d.theme;applyTheme()}
-  else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;b.textContent='Сбрасываем…';(async()=>{try{await cloudWriteQueue;await clearCloud();try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(err){b.disabled=false;b.textContent='Сбросить прогресс';window.rs=0;toast('Не удалось очистить облачное сохранение. Попробуй ещё раз внутри Telegram.');console.error(err)}})();return}
+  else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;b.textContent='Сбрасываем…';window.resetting=true;cloudEpoch++;cloudPending=null;(async()=>{try{await cloudWriteQueue;await clearCloud();try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(err){window.resetting=false;b.disabled=false;b.textContent='Сбросить прогресс';window.rs=0;toast('Не удалось очистить облачное сохранение. Попробуй ещё раз внутри Telegram.');console.error(err)}})();return}
   else if(d.btab){btab=d.btab}
   else if(d.ach){const a=AT[d.ach],L=alv(d.ach),nx=a.lv[L];toast(nx?a.name+' '+R[L+1]+': '+a.verb+' '+nx+' '+a.unit+' ('+a.get()+'/'+nx+')':a.name+' III: достигнут максимальный уровень')}
   else if(d.scare){tab='skins'}
@@ -765,14 +789,43 @@ document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[da
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
 claimPaid();
+{const leave=()=>{if(window.resetting)return;save();flushCloudNow()};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')leave()});
+addEventListener('pagehide',leave);addEventListener('beforeunload',leave);
+if(TG){try{TG.onEvent('deactivated',leave)}catch(e){}}}
 setInterval(tick,1000);
 applyTheme();
 render();
-if(cloudUsable&&(!cloudInitial||migrateLocalToCloud||repairPlotsFromLocal))save();
+if(cloudUsable&&(!cloudInitial||migrateLocalToCloud||repairPlotsFromLocal||preferLocal))save();
 {const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
 ;Promise.all([document.fonts?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve(),new Promise(r=>setTimeout(r,1100))]).then(()=>document.getElementById('boot').classList.add('off'));
 addEventListener('error',()=>toast('Что-то пошло не так, попробуй перезайти'));
 })();
 </script>
+
+<style>
+#maintenance-screen{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg,#eef0f4);color:var(--ink,#12161e);font-family:"Nunito",system-ui,sans-serif;text-align:center}
+#maintenance-screen .maintenance-card{width:100%;max-width:420px;padding:30px 22px;border-radius:24px;background:var(--panel,#fff);box-shadow:0 18px 55px rgba(0,0,0,.16);border:1px solid var(--line,rgba(18,22,30,.12))}
+#maintenance-screen .maintenance-icon{font-size:54px;line-height:1;margin-bottom:18px}
+#maintenance-screen h1{font-size:27px;line-height:1.15;margin:0 0 14px;font-weight:800}
+#maintenance-screen p{font-size:16px;line-height:1.5;margin:0 0 20px}
+#maintenance-screen a{display:inline-block;padding:12px 18px;border-radius:14px;background:var(--leaf,#2b4a85);color:#fff;text-decoration:none;font-weight:800}
+#maintenance-screen .maintenance-note{font-size:12px;color:var(--mute,#6a7587);margin-top:16px}
+</style>
+<div id="maintenance-screen" role="dialog" aria-modal="true" aria-labelledby="maintenance-title">
+  <div class="maintenance-card">
+    <div class="maintenance-icon" aria-hidden="true">🛠️</div>
+    <h1 id="maintenance-title">Технический перерыв</h1>
+    <p>Ведутся технические работы, пожалуйста проявите терпение;)</p>
+    <a href="https://t.me/FarmLand_news" target="_blank" rel="noopener noreferrer">Следите за новостями в FarmLand_news</a>
+    <div class="maintenance-note">Pocket FarmLand временно недоступна</div>
+  </div>
+</div>
+<script>
+/* Maintenance lock: keep the game inaccessible until this overlay is removed in a future update. */
+document.documentElement.style.overflow = 'hidden';
+document.body.style.overflow = 'hidden';
+</script>
+
 </body>
 </html>
