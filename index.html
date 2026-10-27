@@ -319,6 +319,17 @@ document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},o
 </div>
 <script>
 (async function pocketFarmBootstrap(){
+// ===== Серверное время: когда сервер подключён (PAY_API), Date.now() идёт по его часам и не зависит от часов телефона =====
+const _realNow=Date.now.bind(Date);let _tb=null,_tSync=0;
+Date.now=()=>_tb?_tb.s+(performance.now()-_tb.p):_realNow();
+async function syncTime(force){
+  if(!PAY_API)return;
+  if(!force&&_tSync&&performance.now()-_tSync<60000)return;
+  const c=new AbortController(),to=setTimeout(()=>c.abort(),5000);
+  try{const p0=performance.now(),r=await fetch(PAY_API+'/time',{cache:'no-store',signal:c.signal}),j=await r.json(),p1=performance.now();
+    if(j&&typeof j.now==='number'){_tb={s:j.now+(p1-p0)/2,p:p1};_tSync=p1}}catch(e){}
+  clearTimeout(to);
+}
 const CROPS={
   potato:{name:'Картошка',icon:'🥔',time:600,seed:20,sell:12,xp:1,y:[2,4],s:[0,2]},
   wheat:{name:'Пшеница',icon:'🌾',time:1500,seed:45,sell:55,xp:3,y:[1,1],s:[3,0]},
@@ -489,8 +500,24 @@ const DESC={potato:'Неприхотливая классика. Быстро р
 const vetOk=()=>!!S.rd&&S.rd<Date.UTC(2027,0,1)&&Date.now()>=S.rd+365*864e5;
 const medalHtml=()=>vetOk()?`<button class="ach" data-medal="vet"><span class="ic">🎖️</span></button>`:'<div class="slot"></div>';
 const titleHtml=()=>{const un=TITLES.filter(t=>t.ok()),cur=TITLES.find(t=>t.id===S.title&&t.ok());return (cur?`<div class="gold">${cur.n}</div>`:'')+'<button class="tplus" data-tplus="1" aria-label="Титулы">+</button>'+(tpick?`<div class="seeds">${un.map(t=>`<button class="chip${S.title===t.id?' on':''}" data-title="${t.id}">${t.n}</button>`).join('')}<button class="chip" data-title="">Без титула</button></div>`:'')};
-const invHtml=()=>S.invd?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи 3 друзей<small>Награда: 150 🪙 · отправлено ${S.inv||0}/3</small></div>${(S.inv||0)>=3?'<button class="btn" data-inv="1">Забрать</button>':`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`;
-const SHARE='https://t.me/share/url?url='+encodeURIComponent('https://t.me/pocketfarmland_bot')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand: уютная ферма прямо в Telegram! Сажай культуры, продавай урожай и собирай награды. Играть: @pocketfarmland_bot');
+const invHtml=()=>S.invd?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи 3 друзей<small>Награда: 150 🪙 · ${srvOn()?'приглашено':'отправлено'} ${S.inv||0}/3</small></div>${(S.inv||0)>=3?'<button class="btn" data-inv="1">Забрать</button>':`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE()}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`;
+const REF_BASE='https://t.me/pocketfarmland_bot?startapp=ref_';
+const srvOn=()=>!!(PAY_API&&TG&&TG.initData);
+const myId=()=>{try{return TG.initDataUnsafe.user.id||0}catch(e){return 0}};
+const refLink=()=>srvOn()&&myId()?REF_BASE+myId():'https://t.me/pocketfarmland_bot';
+const SHARE_TXT='Заходи в Pocket FarmLand: уютная ферма прямо в Telegram! Сажай культуры, продавай урожай и собирай награды. Играть: @pocketfarmland_bot';
+const SHARE=()=>'https://t.me/share/url?url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent(SHARE_TXT);
+async function refSync(force){
+  if(!srvOn())return;
+  if(!force&&refSync.t&&Date.now()-refSync.t<60000)return;refSync.t=Date.now();
+  try{const j=await payPost('/ref/state',{});
+    if(j&&typeof j.count==='number'){let ch=false;const n=Math.min(3,j.count);if(n!==(S.inv||0)){S.inv=n;ch=true}if(j.claimed&&!S.invd){S.invd=true;ch=true}if(ch){save();render()}}}catch(e){}
+}
+async function refStart(){
+  if(!srvOn())return;
+  try{if(!S.srvReg){const j=await payPost('/ref/register',{});if(j&&j.ok){S.srvReg=1;save()}}}catch(e){}
+  refSync(true);
+}
 const SKN={classic:'Классическое',halloween:'Зомби Пугало',golden:'Золотой Жнец'};
 const MSK10=7*36e5; // 10:00 по Москве (UTC+3, без перехода на летнее время) = 07:00 UTC
 const mskAt10=(y,m,d)=>Date.UTC(y,m,d)+MSK10;
@@ -544,12 +571,13 @@ const promoHtml=()=>{
   return `<div class="sec">🔥 Акции</div><div class="promos" id="promos">${cards.join('')}</div>${dots}<div class="sec">Семена</div>`;
 };
 
-const PAY_API='';
+// URL твоего сервера Cloudflare Worker, например 'https://pocket-farmland-api.ИМЯ.workers.dev' (без слэша в конце). Пусто = сервер выключен, игра работает как раньше.
+const PAY_API='https://divine-water-beadpocket-farmland-api.hindiefun.workers.dev';
 const PACKS=[{id:'gems30',n:30,st:99},{id:'gems50',n:50,st:125},{id:'gems120',n:120,st:199},{id:'gems300',n:300,st:299}];
 const SHOP_PACKS=PACKS.filter(k=>k.id!=='gems50');
 async function payPost(path,body){const r=await fetch(PAY_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,...body})});return r.json()}
 async function claimPaid(){if(!PAY_API||!TG||!TG.initData)return;try{const j=await payPost('/claim',{}),ids=[];(j.items||[]).forEach(it=>{ids.push(it.id);S.paid=S.paid||{};if(S.paid[it.id])return;S.paid[it.id]=1;if(it.product==='premium')passInit().prem=true;else{const k=PACKS.find(x=>x.id===it.product);if(k)S.cr=(S.cr||0)+k.n}toast('Покупка получена ✓')});if(ids.length){save();render();payPost('/ack',{ids}).catch(()=>{})}}catch(e){}}
-async function pay(prod){if(!PAY_API||!TG||!TG.openInvoice){toast('Оплата Stars заработает внутри Telegram после подключения бота');return}try{const j=await payPost('/invoice',{product:prod});if(!j.link)throw 0;TG.openInvoice(j.link,st=>{if(st==='paid'){setTimeout(claimPaid,800);setTimeout(claimPaid,4000)}else if(st==='failed')toast('Оплата не прошла')})}catch(e){toast('Не удалось создать счёт, попробуй позже')}}
+async function pay(prod){if(!PAY_API||!TG||!TG.openInvoice){toast('Оплата Stars заработает внутри Telegram после подключения бота');return}try{const j=await payPost('/invoice',{product:prod});if(j.error==='already'){toast('Premium уже куплен');return}if(j.error==='limit'){toast('Это предложение на этой неделе уже куплено');return}if(!j.link)throw 0;TG.openInvoice(j.link,st=>{if(st==='paid'){setTimeout(claimPaid,800);setTimeout(claimPaid,4000)}else if(st==='failed')toast('Оплата не прошла')})}catch(e){toast('Не удалось создать счёт, попробуй позже')}}
 const premOk=()=>!!(S.pp&&S.pp.prem&&Date.now()<=passEnd(S.pp));
 const WHO=['Мэр','Кафе на площади','Соседка','Детский сад','Торговец с рынка'];
 function fly(t,e){const s=document.createElement('span');s.className='fly';s.textContent=t;s.style.left=((e&&e.clientX)||innerWidth/2)+'px';s.style.top=((e&&e.clientY)||innerHeight/2)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1000)}
@@ -757,7 +785,7 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.pump){if(pumpOn()&&(S.cr||0)>=15){S.cr-=15;S.picons=S.picons||[];if(!S.picons.includes(3))S.picons.push(3);toast('Получена иконка 🎃');fly('🎃 Иконка',e)}else{toast('Не хватает кристаллов');return}}
   else if(d.zom){if(zomOn()){S.skins=S.skins||[];if(!S.skins.includes('halloween'))S.skins.push('halloween');toast('Получен скин «Зомби Пугало»');fly('🧟 Скин',e)}}
   else if(d.skin){S.sc.skin=d.skin==='classic'?'':d.skin}
-  else if(d.inv){if((S.inv||0)>=3){S.invd=true;earn(150);toast('Награда: 150 монет')}else{const u='https://t.me/share/url?url='+encodeURIComponent('https://t.me/FarmLand_news')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand!');if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}}
+  else if(d.inv){if(srvOn()){(async()=>{try{const j=await payPost('/ref/claim',{});if(j.ok){S.invd=true;earn(150);toast('Награда: 150 монет')}else if(j.already){S.invd=true;toast('Награда уже получена')}else{toast('Пока приглашено меньше 3 друзей');refSync(true);return}save();render()}catch(e){toast('Нет связи с сервером, попробуй позже')}})();return}if((S.inv||0)>=3){S.invd=true;earn(150);toast('Награда: 150 монет')}else{const u='https://t.me/share/url?url='+encodeURIComponent('https://t.me/FarmLand_news')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand!');if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}}
   else if(d.medal){toast(vetOk()?'Медаль ветерана: ты с нами больше года':(S.rd&&S.rd<Date.UTC(2027,0,1)?'Медаль ветерана: придёт через год после регистрации, '+new Date(S.rd+365*864e5).toLocaleDateString('ru-RU'):'Медаль ветерана выдаётся тем, кто зарегистрировался до 1 января 2027'))}
   else if(d.tplus){if(!TITLES.some(t=>t.ok())){toast('Титулов пока нет: получай достижения');return}tpick=!tpick}
   else if(d.title!==undefined){S.title=d.title;tpick=false}
@@ -789,14 +817,15 @@ document.getElementById('view').addEventListener('click',e=>{
   }
   checkAch();save();render();
 });
-document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd&&!srvOn()){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
-claimPaid();
+(async()=>{await syncTime(true);refStart();claimPaid()})();
+setInterval(()=>syncTime(),600000);
 {const leave=()=>{if(window.resetting)return;save();flushCloudNow()};
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')leave()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')leave();else{syncTime();refSync()}});
 addEventListener('pagehide',leave);addEventListener('beforeunload',leave);
-if(TG){try{TG.onEvent('deactivated',leave)}catch(e){}}}
+if(TG){try{TG.onEvent('deactivated',leave);TG.onEvent('activated',()=>{syncTime();refSync()})}catch(e){}}}
 setInterval(tick,1000);
 applyTheme();
 render();
