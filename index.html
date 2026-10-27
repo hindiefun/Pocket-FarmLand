@@ -433,7 +433,7 @@ const SKINS={classic:'<svg viewBox="0 0 48 48" width="40" height="40"><path d="M
 SKINS.classic='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 6v38M7 23h34" stroke="#7a5a3a" stroke-width="3" stroke-linecap="round"/><path d="M14 15h20l-3-7H17z" fill="#d6a93f"/><rect x="10" y="14" width="28" height="3" rx="1.5" fill="#b98b2c"/><circle cx="24" cy="21" r="5" fill="#e9c9a0"/><circle cx="22" cy="20" r="1" fill="#222"/><circle cx="26" cy="20" r="1" fill="#222"/><path d="M21.5 23.5q2.5 1.5 5 0" stroke="#222" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M16 27h16l2 11H14z" fill="#3f5f9a"/><rect x="19" y="30" width="5" height="5" rx="1" fill="#d6a93f"/><path d="M6 23l-3 4M6 23l-3-1M42 23l3 4M42 23l3-1" stroke="#d6a93f" stroke-width="2" stroke-linecap="round"/></svg>';
 SKINS.halloween='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 14v30M7 26h34" stroke="#5b4a3a" stroke-width="3" stroke-linecap="round"/><rect x="16" y="2" width="16" height="10" rx="1.5" fill="#1b1b24"/><rect x="16" y="9" width="16" height="2.5" fill="#f28c28"/><rect x="11" y="11" width="26" height="3" rx="1.5" fill="#1b1b24"/><ellipse cx="24" cy="21" rx="7" ry="7.5" fill="#8fbf6a"/><circle cx="21" cy="20" r="2.2" fill="#fff"/><circle cx="27" cy="20" r="2.2" fill="#fff"/><circle cx="21.3" cy="20.3" r="1" fill="#222"/><circle cx="26.6" cy="20" r="1" fill="#222"/><path d="M20 25.5h8" stroke="#2a3a1c" stroke-width="1.2"/><path d="M21 24.5v2M23 24.5v2M25 24.5v2M27 24.5v2" stroke="#2a3a1c" stroke-width=".8"/><path d="M16 30h16l3 11-4-2-3 3-3-3-3 3-3-3-4 2z" fill="#3a2f4d"/><path d="M7 26l-3 4M41 26l3 4" stroke="#8fbf6a" stroke-width="2.6" stroke-linecap="round"/></svg>';
 SKINS.golden='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 8v36M7 24h34" stroke="#7a5a3a" stroke-width="3" stroke-linecap="round"/><path d="M13 15h22l-3-6H16z" fill="#e8b830"/><rect x="10" y="14" width="28" height="3" rx="1.5" fill="#c98a1c"/><path d="M18 9l-2-6M24 8V2M30 9l2-6" stroke="#e8b830" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="21" r="5" fill="#e9c9a0"/><circle cx="22" cy="20" r="1" fill="#222"/><circle cx="26" cy="20" r="1" fill="#222"/><path d="M21.5 23.5q2.5 2 5 0" stroke="#222" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M17 26h14l2 12H15z" fill="#f2b632"/><path d="M17 26h14v3H17z" fill="#d9532c"/><path d="M6 24l-3 4M42 24l3 4" stroke="#e8b830" stroke-width="2.4" stroke-linecap="round"/></svg>';
-const SC=60,ACH={gold:{icon:'🏆',name:'Золотой урожай',txt:'собрать 500 ед. урожая',ok:()=>S.harv>=500},mag:{icon:'💰',name:'Магнат',txt:'заработать 5000 монет',ok:()=>S.earned>=5000}};
+const SC=60,ACH={gold:{icon:'🏆',name:'Золотой урожай',txt:'собрать 250 ед. урожая',ok:()=>S.harv>=250},mag:{icon:'💰',name:'Магнат',txt:'заработать 5000 монет',ok:()=>S.earned>=5000}};
 const SVG='<svg viewBox="0 0 40 40" width="36" height="36"><path d="M12 11h16l-3-6H15z" fill="#8a5a2b"/><circle cx="20" cy="15" r="5" fill="#e8c28a"/><path d="M4 23h32M20 20v16" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M13 36l7-8 7 8z" fill="#c98a3a"/></svg>';
 const TABS=()=>`<div class="seeds"><button class="chip ${btab==='crop'?'on':''}" data-btab="crop">Урожай</button><button class="chip ${btab==='ach'?'on':''}" data-btab="ach">Достижения</button></div>`;
 const fmt=s=>{if(s<60)return s+' с';const m=Math.ceil(s/60);return m<60?m+' мин':Math.floor(m/60)+' ч'+(m%60?' '+m%60+' мин':'')};
@@ -481,7 +481,7 @@ const fmtT=m=>m<60?m+' мин':Math.round(m/60)+' ч';
 function newsList(k){const out=[];for(const e of evs(k)){const d=EVT[e.t],nm=e.cs.map(c=>CROPS[c].name).join(', '),ann=e.w>0?e.st-e.w:e.st;if(k<ann)continue;let txt,st;if(k<e.st){txt=d.wt(nm);st='Ожидается через '+fmtT((e.st-k)*10)}else if(k<e.st+e.dur){txt=d.on(nm);st='Идёт, ещё '+fmtT((e.st+e.dur-k)*10)}else if(k<e.st+e.dur+SL){txt=d.n+': событие завершено, цены возвращаются к обычным ('+nm+')';st='Завершено'}else continue;out.push({i:d.i,txt,st,t:ann})}return out.sort((a,b)=>b.t-a.t)}
 const drY=(id,n)=>evs(nowK()).some(e=>e.t==='drought'&&evW(e,nowK())>0&&e.cs.includes(id))?Math.max(1,n-1):n;
 function earn(n){S.coins+=n;S.earned+=n}
-const AT={gold:{icon:'🏆',name:'Золотой урожай',verb:'собрать',unit:'ед. урожая',get:()=>S.harv,lv:[500,2000,6000]},mag:{icon:'💰',name:'Магнат',verb:'заработать',unit:'монет',get:()=>S.earned,lv:[5000,25000,100000]}};
+const AT={gold:{icon:'🏆',name:'Золотой урожай',verb:'собрать',unit:'ед. урожая',get:()=>S.harv,lv:[250,1250,5000]},mag:{icon:'💰',name:'Магнат',verb:'заработать',unit:'монет',get:()=>S.earned,lv:[5000,25000,100000]}};
 const R=['','I','II','III'];
 const alv=k=>AT[k].lv.filter(n=>AT[k].get()>=n).length;
 const TITLES=[{id:'gold3',k:'gold',n:'Хозяин полей',ok:()=>alv('gold')>=3},{id:'mag3',k:'mag',n:'Предприниматель',ok:()=>alv('mag')>=3}];
@@ -492,7 +492,10 @@ const titleHtml=()=>{const un=TITLES.filter(t=>t.ok()),cur=TITLES.find(t=>t.id==
 const invHtml=()=>S.invd?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи 3 друзей<small>Награда: 150 🪙 · отправлено ${S.inv||0}/3</small></div>${(S.inv||0)>=3?'<button class="btn" data-inv="1">Забрать</button>':`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`;
 const SHARE='https://t.me/share/url?url='+encodeURIComponent('https://t.me/pocketfarmland_bot')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand: уютная ферма прямо в Telegram! Сажай культуры, продавай урожай и собирай награды. Играть: @pocketfarmland_bot');
 const SKN={classic:'Классическое',halloween:'Зомби Пугало',golden:'Золотой Жнец'};
-const dayIdx=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5);
+const MSK10=7*36e5; // 10:00 по Москве (UTC+3, без перехода на летнее время) = 07:00 UTC
+const mskAt10=(y,m,d)=>Date.UTC(y,m,d)+MSK10;
+const dayIdx=()=>Math.floor((Date.now()-MSK10)/864e5);
+const passEnd=P=>Math.ceil((P.st+28*864e5-MSK10)/864e5)*864e5+MSK10;
 const snap=()=>({h:S.harv,e:S.earned,p:S.np||0,s:S.ns||0,q:S.nq||0});
 const stat=k=>snap()[k];
 const DT=[{k:'h',n:'Собрать {t} ед. урожая',t:20,s:10},{k:'p',n:'Посадить {t} растений',t:12,s:8},{k:'s',n:'Продать {t} ед. урожая',t:15,s:8},{k:'e',n:'Заработать {t} монет',t:150,s:10},{k:'q',n:'Выполнить {t} письмо',t:1,s:12}];
@@ -504,14 +507,14 @@ const RWF=['c30','c40','c50','c50','g10','c60','c70','c70','c80','g5','c90','c90
 const RWP=['s','c70','g5','c80','c100','c100','g10','c120','c120','c150','c150','g5','c150','c160','c180','c180','g5','c200','c200','c200'];
 function rw(tr,L){const t=(tr==='f'?RWF:RWP)[L-1];if(!t)return[];const k=t[0],n=+t.slice(1);return k==='c'?[{t:'coins',n}]:k==='g'?[{t:'cr',n}]:k==='i'?[{t:'icon',n:1}]:[{t:'skin',n:1}]}
 const rwTxt=a=>a.map(r=>r.t==='skin'?'🎃 Скин':({coins:'🪙',cr:'💎'})[r.t]+' '+r.n).join(' ');
-const ZOM_A=new Date(2026,9,30).getTime(),ZOM_B=new Date(2026,10,8).getTime();
+const ZOM_A=mskAt10(2026,9,30),ZOM_B=mskAt10(2026,10,8);
 const seasonalCountdown=()=>Date.now()<ZOM_A?'⏳ Старт через '+dl(ZOM_A-Date.now()):Date.now()<ZOM_B?'⏳ До конца '+dl(ZOM_B-Date.now()):'⏳ Акция завершена';
 const promoWin=()=>Date.now()>=ZOM_A&&Date.now()<ZOM_B;
 const zomOn=()=>promoWin()&&!(S.skins||[]).includes('halloween');
 const pumpOn=()=>promoWin()&&!(S.picons||[]).includes(3);
 const SKH=id=>id==='halloween'?(zomOn()?'Скидка 100% в магазине':Date.now()<ZOM_A?'Акция в магазине с 30 октября':'Акция завершилась'):id==='golden'?'Доступно в Farm Pass Premium':'Недоступно';
 const GEM_OFFER_MS=24*60*60*1000;
-const gemWeekStart=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()};
+const gemWeekStart=()=>(Math.floor((dayIdx()+3)/7)*7-3)*864e5+MSK10;
 function ensureGemOffer(){
   const now=Date.now();let p=S.gemPromo;
   if(p&&p.activeUntil>now)return p;
@@ -547,7 +550,7 @@ const SHOP_PACKS=PACKS.filter(k=>k.id!=='gems50');
 async function payPost(path,body){const r=await fetch(PAY_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,...body})});return r.json()}
 async function claimPaid(){if(!PAY_API||!TG||!TG.initData)return;try{const j=await payPost('/claim',{}),ids=[];(j.items||[]).forEach(it=>{ids.push(it.id);S.paid=S.paid||{};if(S.paid[it.id])return;S.paid[it.id]=1;if(it.product==='premium')passInit().prem=true;else{const k=PACKS.find(x=>x.id===it.product);if(k)S.cr=(S.cr||0)+k.n}toast('Покупка получена ✓')});if(ids.length){save();render();payPost('/ack',{ids}).catch(()=>{})}}catch(e){}}
 async function pay(prod){if(!PAY_API||!TG||!TG.openInvoice){toast('Оплата Stars заработает внутри Telegram после подключения бота');return}try{const j=await payPost('/invoice',{product:prod});if(!j.link)throw 0;TG.openInvoice(j.link,st=>{if(st==='paid'){setTimeout(claimPaid,800);setTimeout(claimPaid,4000)}else if(st==='failed')toast('Оплата не прошла')})}catch(e){toast('Не удалось создать счёт, попробуй позже')}}
-const premOk=()=>!!(S.pp&&S.pp.prem&&Date.now()<=S.pp.st+28*864e5);
+const premOk=()=>!!(S.pp&&S.pp.prem&&Date.now()<=passEnd(S.pp));
 const WHO=['Мэр','Кафе на площади','Соседка','Детский сад','Торговец с рынка'];
 function fly(t,e){const s=document.createElement('span');s.className='fly';s.textContent=t;s.style.left=((e&&e.clientX)||innerWidth/2)+'px';s.style.top=((e&&e.clientY)||innerHeight/2)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1000)}
 function story(title,share){const old=document.getElementById('story');if(old)old.remove();const el=document.createElement('div');el.id='story';el.className='story';el.innerHTML=`<span class="st-i">🎉</span><div class="st-t"><b>${esc(title)}</b><small>Достижение разблокировано</small></div><a class="btn" data-story="1" data-text="${esc(share)}" href="https://t.me/share/url?url=${encodeURIComponent('https://t.me/pocketfarmland_bot')}&text=${encodeURIComponent(share)}" target="_blank" rel="noopener noreferrer">Похвастаться в Telegram</a><button class="st-x" aria-label="Закрыть">✕</button>`;document.body.appendChild(el);el.querySelector('.st-x').onclick=()=>el.remove();setTimeout(()=>el.remove(),14000)}
@@ -556,7 +559,7 @@ function passCheck(){const P=passInit(),di=dayIdx(),wi=Math.floor((di+3)/7);
   if(P.d.day!==di)P.d={day:di,base:snap(),done:[],tasks:genTasks(DT,'dt')};else if(!P.d.tasks)P.d.tasks=genTasks(DT,'dt');
   if(P.w.wk!==wi)P.w={wk:wi,base:snap(),done:[],tasks:genTasks(WT,'wt')};else if(!P.w.tasks)P.w.tasks=genTasks(WT,'wt');
 }
-function claimTask(id){const P=passInit();if(Date.now()>P.st+28*864e5){toast('Сезон завершён');return}passCheck();
+function claimTask(id){const P=passInit();if(Date.now()>passEnd(P)){toast('Сезон завершён');return}passCheck();
   const per=id[0]==='w'?P.w:P.d,t=(per.tasks||[]).find(x=>x.id===id);
   if(!t||per.done.includes(id))return;if(stat(t.k)-per.base[t.k]<t.t){toast('Задание ещё не выполнено');return}
   const l0=pLvl();per.done.push(id);P.stars+=t.s;toast('Farm Pass: +'+t.s+' 🌟');if(pLvl()>l0)setTimeout(()=>toast('Farm Pass: уровень '+pLvl()+'!'),1500);return '+ '+t.s+' 🌟'}
@@ -599,7 +602,7 @@ function tick(){
 }
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const TG=window.Telegram&&window.Telegram.WebApp;
-const isHw=()=>{const d=new Date(),m=d.getMonth(),n=d.getDate();return (m===9&&n>=27)||(m===10&&n<=1)};
+const isHw=()=>{const t=Date.now();return t>=Date.UTC(2026,9,27,7)&&t<Date.UTC(2026,10,8,7)};
 function applyTheme(){const r=document.documentElement;const t=(S.theme==='light'||S.theme==='dark')?S.theme:(TG&&TG.colorScheme)||'';if(t)r.dataset.theme=t;else delete r.dataset.theme;
   r.toggleAttribute('data-hw',isHw());
   if(TG){try{const bg=getComputedStyle(r).getPropertyValue('--bg').trim();TG.setHeaderColor(bg);TG.setBackgroundColor(bg);if(TG.setBottomBarColor)TG.setBottomBarColor(bg)}catch(e){}}}
@@ -654,7 +657,7 @@ function render(){
     let html='';
     if(iv)html+='<div class="sec">👥 Друзья</div>'+iv;
     html+='<div class="sec">✉️ Заказы жителей · '+S.q.length+'/3</div>';
-    html+=S.q.length?S.q.map((q,i)=>{const C=CROPS[q.c],hv=S.crops[q.c]||0;return `<div class="row"><span class="ic">${C.icon}</span><div class="t"><b>${WHO[q.k]}</b><br>${QT[q.k].replace('{n}',q.n).replace('{c}',C.icon+' '+C.name)}<small>Награда: ${q.m} 🪙 · ${q.x} опыта · в амбаре ${hv}/${q.n}</small></div><button class="btn" data-qd="${i}" ${hv>=q.n?'':'disabled'}>Сдать</button></div>`}).join(''):'<div class="empty-msg">Новых заказов пока нет. Они приходят раз в день-два.</div>';
+    html+=S.q.length?S.q.map((q,i)=>{const C=CROPS[q.c],hv=S.crops[q.c]||0;return `<div class="row"><span class="ic">${C.icon}</span><div class="t"><b>${WHO[q.k]}</b><br>${QT[q.k].replace('{n}',q.n).replace('{c}',C.icon+' '+C.name)}<small>Награда: ${q.m} 🪙 · ${q.x} опыта · в амбаре ${hv}/${q.n}</small></div><button class="btn" data-qd="${i}" ${hv>=q.n?'':'disabled'}>Сдать</button></div>`}).join(''):'<div class="empty-msg">Новых писем пока нет.</div>';
     v.innerHTML=html;
     return;
   }
@@ -666,7 +669,7 @@ function render(){
   }
   if(tab==='pass'){
     h.textContent='Farm Pass';passCheck();
-    const P=S.pp,L=pLvl(),left=P.st+28*864e5-Date.now(),cur=pcum(L),pr=L<PL?Math.round((P.stars-cur)/(pcum(L+1)-cur)*100):100;
+    const P=S.pp,L=pLvl(),left=passEnd(P)-Date.now(),cur=pcum(L),pr=L<PL?Math.round((P.stars-cur)/(pcum(L+1)-cur)*100):100;
     let html=`<div class="ph"><div class="ph-top"><div><div class="ph-k">FARM PASS</div><div class="ph-t">Новое начало</div><div class="ph-s">Сезон 1 · ${left>0?'до конца '+dl(left):'сезон завершён'}</div></div><div class="ph-lv"><b>${L}</b><span>уровень</span></div></div><div class="ph-bar"><i style="width:${pr}%"></i></div><div class="ph-row"><span>🌟 ${P.stars}</span><span>${L<PL?'до уровня '+(L+1)+': ещё '+(pcum(L+1)-P.stars):'максимальный уровень'}</span></div>${premOk()?'<div class="ph-prem on">👑 Premium активен до конца сезона</div>':(left>0?'<button class="ph-prem" data-buyprem="1">👑 Открыть Premium · 250 ⭐ Stars</button>':'<div class="ph-prem on">Premium закончился вместе с сезоном</div>')}</div><div class="seg"><button class="${ptab==='tasks'?'on':''}" data-ptab="tasks">Задания</button><button class="${ptab==='rew'?'on':''}" data-ptab="rew">Награды</button></div>`;
     if(ptab==='tasks'){
       html+=`<div class="thelp"><button class="qbtn" data-phelp="1" aria-label="Что это?">?</button></div>${phelp?'<div class="hbox">Выполняй задания и получай звёзды, за которые можно открывать награды!</div>':''}`;
@@ -724,7 +727,7 @@ function render(){
     const ids=Object.keys(S.crops).filter(id=>S.crops[id]>0);
     if(!ids.length){v.innerHTML=TABS()+'<div class="empty-msg">Пока пусто. Собери урожай на грядках.</div>';return}
     const total=ids.reduce((a,id)=>a+S.crops[id]*CROPS[id].sell,0);
-    v.innerHTML=TABS()+ids.map(id=>`<button class="row crow${selC===id?' on':''}" data-cpick="${id}"><span class="ic">${CROPS[id].icon}</span><span class="t">${CROPS[id].name}<small>${S.crops[id]} шт. · ${CROPS[id].sell} 🪙 за шт.</small></span></button>${selC===id?`<div class="sellbar"><button class="btn" style="width:100%" data-sell="${id}">Продать · +${S.crops[id]*CROPS[id].sell} 🪙</button></div>`:''}`).join('');
+    v.innerHTML=TABS()+ids.map(id=>`<button class="row crow${selC===id?' on':''}" data-cpick="${id}"><span class="ic">${CROPS[id].icon}</span><span class="t">${CROPS[id].name}<small>${S.crops[id]} шт.</small></span></button>${selC===id?`<div class="sellbar"><button class="btn" style="width:100%" data-sell="${id}">Продать · +${S.crops[id]*CROPS[id].sell} 🪙</button></div>`:''}`).join('');
   }
 }
 
