@@ -92,6 +92,7 @@ main>*{flex-shrink:0}
 .pic{width:96px;height:96px;border-radius:50%;border:3px solid var(--leaf);background:var(--panel);font-size:52px;padding:0}
 .pname{font-size:22px;font-weight:800}
 button.pname{background:none;border:0;color:inherit;font-family:inherit;padding:0}
+button.pid{background:none;border:0;color:var(--mute);font:inherit;font-size:13px;font-weight:700;padding:0}
 .pic.st{display:flex;align-items:center;justify-content:center}
 .row button.t{background:none;border:0;font:inherit;color:inherit;text-align:left;padding:0}
 .slot{aspect-ratio:1;border-radius:16px;border:2px dashed var(--line)}
@@ -418,7 +419,9 @@ async function clearCloud(){
   if(typeof cloudApi.removeItems==='function')await cloudCall('removeItems',keys);
   else for(const key of keys)await cloudCall('removeItem',key);
 }
-const localInitial=load();
+const curTg=(()=>{try{return Number(window.Telegram.WebApp.initDataUnsafe.user.id)||0}catch(e){return 0}})();
+// Локальное сохранение другого Telegram-аккаунта (общий браузер/приложение) не берём.
+const localInitial=(()=>{const l=load();return(l&&l.tgid&&curTg&&l.tgid!==curTg)?null:l})();
 const cloudInitial=await readCloud();
 // Repair older cloud saves where the economy was synced but planted crops were not.
 // Only take local plots when the rest of the important progress matches, avoiding
@@ -437,6 +440,7 @@ const cloudTs=cloudInitial?(Number(cloudInitial._ts)||lastCloudUpdated||0):0,loc
 const preferLocal=!!(cloudInitial&&localInitial&&localTs>cloudTs);
 let S=(preferLocal?localInitial:cloudInitial)||localInitial||{coins:0,seeds:{},crops:{},sel:'',plots:Array.from({length:9},(_,i)=>({u:i<4,c:null,t:0}))};
 const migrateLocalToCloud=!cloudInitial&&!!localInitial&&cloudUsable;
+if(curTg)S.tgid=curTg;
 S.harv=S.harv||0;S.earned=S.earned||0;S.ach=S.ach||{};S.sc=S.sc||{w:0,n:0};S.xp=S.xp||0;S.q=S.q||[];if(S.pp&&S.pp.v!==4){S.pp=undefined;S.skins=[];S.picons=[];S.sc.skin='';if(S.icon>2)S.icon=0}if(S.reg&&!S.rd)S.rd=Date.now();
 const MIG={carrot:'potato'};
 while(S.plots.length<15)S.plots.push({u:!!S.gh,c:null,t:0,g:true});
@@ -532,10 +536,10 @@ async function profSync(force){
   if(!force&&profSync.k===k)return;
   profSync.busy=1;
   try{const j=await payPost('/profile/sync',d);
-    if(j&&j.ok){profSync.k=k;let ch=false;if(S.pid!==j.id){S.pid=j.id;save();ch=true}if(typeof j.incoming==='number'&&j.incoming!==fInc){fInc=j.incoming;ch=true}if(ch)softRender(tab==='friends'?'friends':'profile')}}catch(e){}
+    if(j&&j.ok){profSync.k=k;let ch=false;if(S.pid!==j.id){S.pid=j.id;save();ch=true}if(typeof j.incoming==='number'&&j.incoming!==fInc){fInc=j.incoming;ch=true}if(ch)softRender(tab==='friends'?'friends':'profile')}else if(!S.pid)setTimeout(()=>profSync(true),3000)}catch(e){if(!S.pid)setTimeout(()=>profSync(true),3000)}
   profSync.busy=0;
 }
-function profSoon(){try{if(!srvOn())return}catch(e){return}clearTimeout(profSoon.h);profSoon.h=setTimeout(()=>profSync(),15000)}
+function profSoon(){try{if(!srvOn())return}catch(e){return}clearTimeout(profSoon.h);profSoon.h=setTimeout(()=>profSync(),S.pid?15000:600)}
 async function friendsLoad(){
   if(!srvOn())return;
   profSync(true);
@@ -553,6 +557,10 @@ async function fAct(path,id,extra){
     toast(M[j&&j.error]||'Не получилось, попробуй позже')
   }catch(e){toast('Нет связи с сервером')}
   return null;
+}
+async function copyText(t){
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(t);return true}}catch(e){}
+  try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0;left:-9999px';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(e){return false}
 }
 async function admOpen(){
   if(!srvOn()){toast('Список игроков доступен только в Telegram');return}
@@ -709,7 +717,7 @@ function render(){
     h.textContent='Профиль';
     if(srvOn()&&(!S.pid||!render.pT||Date.now()-render.pT>30000)){render.pT=Date.now();profSync(true)}
     const L=lvl(),a=LX[L-1],b=L<20?LX[L]:a,pr=L<20?Math.round((S.xp-a)/(b-a)*100):100;
-    v.innerHTML=`<div class="prof"><button class="pic" data-pickt="1">${ICONS[S.icon||0]}</button>${pick?`<div class="seeds">${ICONS.map((ic,i)=>(i<3||(S.picons||[]).includes(i))?`<button class="chip" style="font-size:28px" data-icon="${i}">${ic}</button>`:'').join('')}</div>`:'<small class="lbl">Нажми на иконку, чтобы сменить</small>'}<button class="pname" data-nt="1">${esc(S.nick||'')}</button>${titleHtml()}</div>${`<button class="row crow" data-go="friends"><span class="ic">👥</span><span class="t">Друзья<small>${fInc?'Новых заявок: '+fInc:'Список друзей и заявки'}</small></span></button>`}<div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-S.xp)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${S.xp}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${new Date(S.rd||Date.now()).toLocaleDateString('ru-RU')}</small></div></div><div class="row"><div class="t">ID игрока<small>${S.pid||(srvOn()?'появится через пару секунд':'появится в Telegram')}</small></div>${S.pid?'<button class="btn" data-copyid="1">Копировать</button>':''}</div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${medalHtml()}<div class="slot"></div><div class="slot"></div></div>`;
+    v.innerHTML=`<div class="prof"><button class="pic" data-pickt="1">${ICONS[S.icon||0]}</button>${pick?`<div class="seeds">${ICONS.map((ic,i)=>(i<3||(S.picons||[]).includes(i))?`<button class="chip" style="font-size:28px" data-icon="${i}">${ic}</button>`:'').join('')}</div>`:'<small class="lbl">Нажми на иконку, чтобы сменить</small>'}<button class="pname" data-nt="1">${esc(S.nick||'')}</button><button class="pid" data-copyid="${S.pid||''}">ID: ${S.pid||(srvOn()?'…':'появится в Telegram')}</button>${titleHtml()}</div><button class="btn" style="width:100%;padding:14px;font-size:17px;margin:0 0 14px" data-go="friends">👥 Друзья${fInc?' · новых заявок: '+fInc:''}</button><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-S.xp)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${S.xp}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${new Date(S.rd||Date.now()).toLocaleDateString('ru-RU')}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${medalHtml()}<div class="slot"></div><div class="slot"></div></div>`;
     return;
   }
   if(tab==='intro'){
@@ -721,7 +729,7 @@ function render(){
     if(!render.frT||Date.now()-render.frT>15000){render.frT=Date.now();friendsLoad()}
     const F=frd||{friends:[],incoming:[],outgoing:[]},old=document.getElementById('fid'),ov=old?old.value:'';
     const prow=(p,sub)=>`<button class="row crow" data-pview="${p.id}"><span class="ic">${ICONS[p.icon]||ICONS[0]}</span><span class="t">${esc(p.nick||'—')}<small>${sub}</small></span></button>`;
-    let html=`<div class="row"><div class="t">Твой ID<small>${S.pid||'загрузка…'}</small></div>${S.pid?'<button class="btn" data-copyid="1">Копировать</button>':''}</div><p class="lbl" style="margin-top:14px">Добавить друга по ID</p><input id="fid" class="nick" inputmode="numeric" maxlength="12" placeholder="ID игрока" autocomplete="off" value="${esc(ov)}" style="margin:0 0 10px"><button class="btn" style="width:100%" data-fsearch="1">Найти</button>`;
+    let html=`<div class="row"><div class="t">Твой ID<small>${S.pid||'загрузка…'}</small></div>${S.pid?'<button class="btn" data-copyid="'+S.pid+'">Копировать</button>':''}</div><p class="lbl" style="margin-top:14px">Добавить друга по ID</p><input id="fid" class="nick" inputmode="numeric" maxlength="12" placeholder="ID игрока" autocomplete="off" value="${esc(ov)}" style="margin:0 0 10px"><button class="btn" style="width:100%" data-fsearch="1">Найти</button>`;
     if(F.incoming.length)html+=`<div class="sec">Заявки · ${F.incoming.length}</div>`+F.incoming.map(p=>`<div class="row"><button class="t" data-pview="${p.id}"><b>${esc(p.nick||'—')}</b><small>Хочет добавить тебя в друзья</small></button><button class="btn" data-facc="${p.id}">✓</button><button class="btn" style="background:var(--soil)" data-fdec="${p.id}">✕</button></div>`).join('');
     html+=`<div class="sec">Друзья · ${F.friends.length}</div>`+(F.friends.length?F.friends.map(p=>prow(p,'Уровень '+lvlX(p.xp)+' · ID '+p.id)).join(''):'<div class="empty-msg" style="padding:16px 8px">Пока никого. Найди друга по ID.</div>');
     if(F.outgoing.length)html+=`<div class="sec">Отправленные заявки · ${F.outgoing.length}</div>`+F.outgoing.map(p=>prow(p,'Ожидает ответа · ID '+p.id)).join('');
@@ -734,7 +742,7 @@ function render(){
     if(pvw.err){v.innerHTML='<div class="empty-msg">'+(pvw.err==='nf'?'Игрок с таким ID не найден':'Не удалось загрузить профиль')+'</div>';return}
     const P=pvw,x=P.xp||0,L=lvlX(x),a=LX[L-1],b=L<20?LX[L]:a,pr=L<20?Math.round((x-a)/(b-a)*100):100,tt=TITLES.find(t=>t.id===P.title);
     const act=P.rel==='self'?'':P.rel==='friend'?`<button class="btn" style="width:100%;margin-top:14px;background:var(--soil)" data-frm="${P.id}">Удалить из друзей</button>`:P.rel==='out'?`<p class="lbl" style="margin-top:14px">Заявка отправлена</p><button class="btn" style="width:100%;background:var(--soil)" data-frm="${P.id}">Отменить заявку</button>`:P.rel==='in'?`<p class="lbl" style="margin-top:14px">Хочет добавить тебя в друзья</p><div style="display:flex;gap:10px"><button class="btn" style="flex:1" data-facc="${P.id}">Принять</button><button class="btn" style="flex:1;background:var(--soil)" data-fdec="${P.id}">Отклонить</button></div>`:`<button class="btn" style="width:100%;margin-top:14px" data-fadd="${P.id}">Добавить в друзья</button>`;
-    v.innerHTML=`<div class="prof"><div class="pic st">${ICONS[P.icon]||ICONS[0]}</div><div class="pname">${esc(P.nick||'')}</div>${tt?`<div class="gold">${tt.n}</div>`:''}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-x)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${x}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${P.rd?new Date(P.rd).toLocaleDateString('ru-RU'):'—'}</small></div></div><div class="row"><div class="t">ID игрока<small>${P.id}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${vetFor(P.rd)?'<button class="ach" data-pmedal="1"><span class="ic">🎖️</span></button>':'<div class="slot"></div>'}<div class="slot"></div><div class="slot"></div></div>${act}`;
+    v.innerHTML=`<div class="prof"><div class="pic st">${ICONS[P.icon]||ICONS[0]}</div><div class="pname">${esc(P.nick||'')}</div><button class="pid" data-copyid="${P.id}">ID: ${P.id}</button>${tt?`<div class="gold">${tt.n}</div>`:''}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-x)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${x}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${P.rd?new Date(P.rd).toLocaleDateString('ru-RU'):'—'}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${vetFor(P.rd)?'<button class="ach" data-pmedal="1"><span class="ic">🎖️</span></button>':'<div class="slot"></div>'}<div class="slot"></div><div class="slot"></div></div>${act}`;
     return;
   }
   if(tab==='admin'){
@@ -782,7 +790,7 @@ function render(){
   if(tab==='settings'){
     h.textContent='Настройки';
     const th=S.theme||'auto';
-    v.innerHTML=`<p class="lbl">Ник: ${esc(S.nick||'')}</p><input id="nn" class="nick" maxlength="16" placeholder="Новый ник" autocomplete="off" style="margin:0 0 10px"><button class="btn" style="width:100%;padding:12px" data-nick="1">Сменить ник · 1475 🪙</button><p class="lbl" style="margin-top:20px">Тема</p><div class="seeds">${[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(([k,n])=>`<button class="chip ${th===k?'on':''}" data-theme="${k}">${n}</button>`).join('')}</div><a class="btn" data-ext="1" href="https://youtube.com/@pocket_farmland?si=qgeCB45LtzX085ud" target="_blank" rel="noopener noreferrer" style="width:100%;margin-top:16px">▶ YouTube-канал игры</a><button class="btn danger" data-reset="1">Сбросить прогресс</button><div style="text-align:center;opacity:.4;font-size:12px;margin-top:auto;padding:24px 0 8px">Версия: 1.1.2</div>`;
+    v.innerHTML=`<p class="lbl">Ник: ${esc(S.nick||'')}</p><input id="nn" class="nick" maxlength="16" placeholder="Новый ник" autocomplete="off" style="margin:0 0 10px"><button class="btn" style="width:100%;padding:12px" data-nick="1">Сменить ник · 1475 🪙</button><p class="lbl" style="margin-top:20px">Тема</p><div class="seeds">${[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(([k,n])=>`<button class="chip ${th===k?'on':''}" data-theme="${k}">${n}</button>`).join('')}</div><a class="btn" data-ext="1" href="https://youtube.com/@pocket_farmland?si=qgeCB45LtzX085ud" target="_blank" rel="noopener noreferrer" style="width:100%;margin-top:16px">▶ YouTube-канал игры</a><button class="btn danger" data-reset="1">Сбросить прогресс</button><div style="text-align:center;opacity:.4;font-size:12px;margin-top:auto;padding:24px 0 8px">Версия: 1.2.1</div>`;
     return;
   }
   if(tab==='gh'&&!S.gh){
@@ -836,7 +844,7 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.promodot!==undefined){const rail=document.getElementById('promos');if(rail){const i=+d.promodot;const card=rail.querySelectorAll('.pcard')[i];if(card)card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});rail.querySelectorAll('.pcard').forEach((c,j)=>{const dot=document.querySelector('[data-promodot="'+j+'"]');if(dot)dot.classList.toggle('on',j===i)})}return}
   else if(d.tg){const u='https://t.me/FarmLand_news';if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}
   else if(d.nt){const n=Date.now();ntC=(n-ntT>2500)?1:ntC+1;ntT=n;if(ntC>=10){ntC=0;admOpen()}return}
-  else if(d.copyid){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(S.pid||'').then(()=>toast('ID скопирован'),()=>toast('Твой ID: '+S.pid));else toast('Твой ID: '+S.pid);return}
+  else if(d.copyid!==undefined){const id=d.copyid;if(!id){toast('ID ещё не присвоен, подожди пару секунд');return}copyText(id).then(ok=>toast(ok?'ID скопирован: '+id:'ID: '+id));return}
   else if(d.fsearch){if(!srvOn()){toast('Друзья работают только внутри Telegram');return}const id=((document.getElementById('fid')||{}).value||'').replace(/\D/g,'');if(id.length<5){toast('Введи ID: минимум 5 цифр');return}if(id===S.pid){toast('Это твой ID');return}pvOpen(id,'friends');return}
   else if(d.pview){pvOpen(d.pview,'friends');return}
   else if(d.fadd){fAct('/friends/request',d.fadd).then(j=>{if(j)toast(j.rel==='friend'?'Вы теперь друзья!':'Заявка отправлена')});return}
@@ -898,7 +906,8 @@ document.getElementById('view').addEventListener('click',e=>{
 document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd&&!srvOn()){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
-(async()=>{await syncTime(true);refStart();claimPaid();profSync(true)})();
+profSync(true);
+(async()=>{await syncTime(true);refStart();claimPaid()})();
 setInterval(()=>syncTime(),600000);
 setInterval(()=>profSync(),120000);
 {const leave=()=>{if(window.resetting)return;save();flushCloudNow()};
