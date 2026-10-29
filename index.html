@@ -509,7 +509,8 @@ const vetFor=rd=>!!rd&&rd<Date.UTC(2027,0,1)&&Date.now()>=rd+365*864e5;
 const vetOk=()=>vetFor(S.rd);
 const medalHtml=()=>vetOk()?`<button class="ach" data-medal="vet"><span class="ic">🎖️</span></button>`:'<div class="slot"></div>';
 const titleHtml=()=>{const un=TITLES.filter(t=>t.ok()),cur=TITLES.find(t=>t.id===S.title&&t.ok());return (cur?`<div class="gold">${cur.n}</div>`:'')+'<button class="tplus" data-tplus="1" aria-label="Титулы">+</button>'+(tpick?`<div class="seeds">${un.map(t=>`<button class="chip${S.title===t.id?' on':''}" data-title="${t.id}">${t.n}</button>`).join('')}<button class="chip" data-title="">Без титула</button></div>`:'')};
-const invHtml=()=>S.invd?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи 3 друзей<small>Награда: 150 🪙 · ${srvOn()?'приглашено':'отправлено'} ${S.inv||0}/3</small></div>${(S.inv||0)>=3?'<button class="btn" data-inv="1">Забрать</button>':`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE()}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`;
+const REF_ST=[{need:3,cr:5},{need:5,cr:10},{need:15,cr:15}];
+const invHtml=()=>{const d=S.refd||[],n=S.inv||0;return REF_ST.map((s,i)=>d[i]?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи ${s.need} друзей<small>Награда: ${s.cr} 💎 · ${srvOn()?'приглашено':'отправлено'} ${Math.min(n,s.need)}/${s.need}</small></div>${n>=s.need?`<button class="btn" data-inv="${i}">Забрать</button>`:`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE()}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`).join('')};
 const REF_BASE='https://t.me/pocketfarmland_bot?startapp=ref_';
 const srvOn=()=>!!(PAY_API&&TG&&TG.initData);
 const myId=()=>{try{return TG.initDataUnsafe.user.id||0}catch(e){return 0}};
@@ -520,7 +521,7 @@ async function refSync(force){
   if(!srvOn())return;
   if(!force&&refSync.t&&Date.now()-refSync.t<60000)return;refSync.t=Date.now();
   try{const j=await payPost('/ref/state',{});
-    if(j&&typeof j.count==='number'){let ch=false;const n=Math.min(3,j.count);if(n!==(S.inv||0)){S.inv=n;ch=true}if(j.claimed&&!S.invd){S.invd=true;ch=true}if(ch){save();render()}}}catch(e){}
+    if(j&&typeof j.count==='number'){let ch=false;const n=Math.min(15,j.count);if(n!==(S.inv||0)){S.inv=n;ch=true}if(Array.isArray(j.stages)){const d=S.refd||[];j.stages.forEach((s,i)=>{if(s.claimed&&!d[i]){d[i]=true;ch=true}});S.refd=d}if(ch){save();render()}}}catch(e){}
 }
 async function refStart(){
   if(!srvOn())return;
@@ -871,7 +872,7 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.pump){if(pumpOn()&&(S.cr||0)>=15){S.cr-=15;S.picons=S.picons||[];if(!S.picons.includes(3))S.picons.push(3);toast('Получена иконка 🎃');fly('🎃 Иконка',e)}else{toast('Не хватает кристаллов');return}}
   else if(d.zom){if(zomOn()){S.skins=S.skins||[];if(!S.skins.includes('halloween'))S.skins.push('halloween');toast('Получен скин «Зомби Пугало»');fly('🧟 Скин',e)}}
   else if(d.skin){S.sc.skin=d.skin==='classic'?'':d.skin}
-  else if(d.inv){if(srvOn()){(async()=>{try{const j=await payPost('/ref/claim',{});if(j.ok){S.invd=true;earn(150);toast('Награда: 150 монет')}else if(j.already){S.invd=true;toast('Награда уже получена')}else{toast('Пока приглашено меньше 3 друзей');refSync(true);return}save();render()}catch(e){toast('Нет связи с сервером, попробуй позже')}})();return}if((S.inv||0)>=3){S.invd=true;earn(150);toast('Награда: 150 монет')}else{const u='https://t.me/share/url?url='+encodeURIComponent('https://t.me/FarmLand_news')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand!');if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}}
+  else if(d.inv){const si=Number(d.inv),st=REF_ST[si];if(!st)return;if(srvOn()){(async()=>{try{const j=await payPost('/ref/claim',{stage:si});S.refd=S.refd||[];if(j.ok){S.refd[si]=true;S.cr=(S.cr||0)+st.cr;toast('Награда: '+st.cr+' 💎')}else if(j.already){S.refd[si]=true;toast('Награда уже получена')}else{toast('Пока приглашено меньше '+st.need+' друзей');refSync(true);return}save();render()}catch(e){toast('Нет связи с сервером, попробуй позже')}})();return}if((S.inv||0)>=st.need){S.refd=S.refd||[];S.refd[si]=true;S.cr=(S.cr||0)+st.cr;toast('Награда: '+st.cr+' 💎')}else{const u='https://t.me/share/url?url='+encodeURIComponent('https://t.me/FarmLand_news')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand!');if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}}
   else if(d.medal){toast(vetOk()?'Медаль ветерана: ты с нами больше года':(S.rd&&S.rd<Date.UTC(2027,0,1)?'Медаль ветерана: придёт через год после регистрации, '+new Date(S.rd+365*864e5).toLocaleDateString('ru-RU'):'Медаль ветерана выдаётся тем, кто зарегистрировался до 1 января 2027'))}
   else if(d.tplus){if(!TITLES.some(t=>t.ok())){toast('Титулов пока нет: получай достижения');return}tpick=!tpick}
   else if(d.title!==undefined){S.title=d.title;tpick=false}
@@ -903,7 +904,7 @@ document.getElementById('view').addEventListener('click',e=>{
   }
   checkAch();save();render();
 });
-document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd&&!srvOn()){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd&&!srvOn()){S.inv=Math.min(15,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
 profSync(true);
