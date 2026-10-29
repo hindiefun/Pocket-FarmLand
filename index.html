@@ -91,6 +91,9 @@ main>*{flex-shrink:0}
 .prof .seeds{justify-content:center;margin:0}
 .pic{width:96px;height:96px;border-radius:50%;border:3px solid var(--leaf);background:var(--panel);font-size:52px;padding:0}
 .pname{font-size:22px;font-weight:800}
+button.pname{background:none;border:0;color:inherit;font-family:inherit;padding:0}
+.pic.st{display:flex;align-items:center;justify-content:center}
+.row button.t{background:none;border:0;font:inherit;color:inherit;text-align:left;padding:0}
 .slot{aspect-ratio:1;border-radius:16px;border:2px dashed var(--line)}
 .seas{font:inherit;font-weight:800;font-size:15px;width:100%;margin-top:8px;padding:10px;border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--ink)}
 .chip.off{opacity:.45}
@@ -439,7 +442,7 @@ const MIG={carrot:'potato'};
 while(S.plots.length<15)S.plots.push({u:!!S.gh,c:null,t:0,g:true});
 for(const o of [S.seeds,S.crops]){for(const k in MIG){if(o[k]){o[MIG[k]]=(o[MIG[k]]||0)+o[k];delete o[k]}}}
 S.plots.forEach(p=>{if(MIG[p.c])p.c=MIG[p.c]});if(MIG[S.sel])S.sel=MIG[S.sel];
-let tab=S.reg?(S.gift===false?'intro':'menu'):'welcome',btab='crop',pick=false,selC='',selM='',mper=144,tpick=false,ptab='tasks',pscroll=false,phelp=false;
+let tab=S.reg?(S.gift===false?'intro':'menu'):'welcome',btab='crop',pick=false,selC='',selM='',mper=144,tpick=false,ptab='tasks',pscroll=false,phelp=false,pvw=null,frd=null,admD=null,ntC=0,ntT=0,fInc=0,pvBack='friends';
 const SKINS={classic:'<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 4v40" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M6 22h36" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M16 14h16l-2-6H18z" fill="#d9a441"/><rect x="11" y="13" width="26" height="3" rx="1.5" fill="#d9a441"/><circle cx="24" cy="20" r="4.5" fill="#e8c28a"/><path d="M17 26h14l2 12H15z" fill="#b5503c"/><path d="M6 22l-3 5M42 22l3 5" stroke="#d9a441" stroke-width="2" stroke-linecap="round"/></svg>'};
 SKINS.classic='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 6v38M7 23h34" stroke="#7a5a3a" stroke-width="3" stroke-linecap="round"/><path d="M14 15h20l-3-7H17z" fill="#d6a93f"/><rect x="10" y="14" width="28" height="3" rx="1.5" fill="#b98b2c"/><circle cx="24" cy="21" r="5" fill="#e9c9a0"/><circle cx="22" cy="20" r="1" fill="#222"/><circle cx="26" cy="20" r="1" fill="#222"/><path d="M21.5 23.5q2.5 1.5 5 0" stroke="#222" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M16 27h16l2 11H14z" fill="#3f5f9a"/><rect x="19" y="30" width="5" height="5" rx="1" fill="#d6a93f"/><path d="M6 23l-3 4M6 23l-3-1M42 23l3 4M42 23l3-1" stroke="#d6a93f" stroke-width="2" stroke-linecap="round"/></svg>';
 SKINS.halloween='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 14v30M7 26h34" stroke="#5b4a3a" stroke-width="3" stroke-linecap="round"/><rect x="16" y="2" width="16" height="10" rx="1.5" fill="#1b1b24"/><rect x="16" y="9" width="16" height="2.5" fill="#f28c28"/><rect x="11" y="11" width="26" height="3" rx="1.5" fill="#1b1b24"/><ellipse cx="24" cy="21" rx="7" ry="7.5" fill="#8fbf6a"/><circle cx="21" cy="20" r="2.2" fill="#fff"/><circle cx="27" cy="20" r="2.2" fill="#fff"/><circle cx="21.3" cy="20.3" r="1" fill="#222"/><circle cx="26.6" cy="20" r="1" fill="#222"/><path d="M20 25.5h8" stroke="#2a3a1c" stroke-width="1.2"/><path d="M21 24.5v2M23 24.5v2M25 24.5v2M27 24.5v2" stroke="#2a3a1c" stroke-width=".8"/><path d="M16 30h16l3 11-4-2-3 3-3-3-3 3-3-3-4 2z" fill="#3a2f4d"/><path d="M7 26l-3 4M41 26l3 4" stroke="#8fbf6a" stroke-width="2.6" stroke-linecap="round"/></svg>';
@@ -451,6 +454,7 @@ const fmt=s=>{if(s<60)return s+' с';const m=Math.ceil(s/60);return m<60?m+' м�
 const fmtN=n=>n>=1e4?(n/1e3).toFixed(1).replace('.0','')+'K':n.toLocaleString('ru-RU');
 const LX=[0,15,40,80,140,220,330,470,640,850,1100,1390,1720,2090,2500,2950,3440,3970,4540,5140];
 const lvl=()=>{let l=1;for(let i=1;i<20;i++)if(S.xp>=LX[i])l=i+1;return l};
+const lvlX=x=>{let l=1;for(let i=1;i<20;i++)if(x>=LX[i])l=i+1;return l};
 const ICONS=['🧑‍🌾','🐔','🐄','🎃'];
 const SEAS=[{n:'Весна',i:'🌸'},{n:'Лето',i:'☀️'},{n:'Осень',i:'🍂'},{n:'Зима',i:'❄️'}];
 const SDAY=14*864e5,GHL=15,GHC=15000;
@@ -497,7 +501,8 @@ const R=['','I','II','III'];
 const alv=k=>AT[k].lv.filter(n=>AT[k].get()>=n).length;
 const TITLES=[{id:'gold3',k:'gold',n:'Хозяин полей',ok:()=>alv('gold')>=3},{id:'mag3',k:'mag',n:'Предприниматель',ok:()=>alv('mag')>=3}];
 const DESC={potato:'Неприхотливая классика. Быстро растёт и даёт до 4 клубней.',wheat:'Переносит холода. Зерно для мельницы и пекарни.',corn:'Любит тёплое лето. Даёт немного, но крупные початки.',tomato:'Сочный летний овощ. Растёт дольше картошки.',berry:'Сладкая и дорогая ягода. Растёт дольше помидора, зато ценится выше.',pumpkin:'Растёт медленно, зато самая крупная. Осенью её ждут особенно.'};
-const vetOk=()=>!!S.rd&&S.rd<Date.UTC(2027,0,1)&&Date.now()>=S.rd+365*864e5;
+const vetFor=rd=>!!rd&&rd<Date.UTC(2027,0,1)&&Date.now()>=rd+365*864e5;
+const vetOk=()=>vetFor(S.rd);
 const medalHtml=()=>vetOk()?`<button class="ach" data-medal="vet"><span class="ic">🎖️</span></button>`:'<div class="slot"></div>';
 const titleHtml=()=>{const un=TITLES.filter(t=>t.ok()),cur=TITLES.find(t=>t.id===S.title&&t.ok());return (cur?`<div class="gold">${cur.n}</div>`:'')+'<button class="tplus" data-tplus="1" aria-label="Титулы">+</button>'+(tpick?`<div class="seeds">${un.map(t=>`<button class="chip${S.title===t.id?' on':''}" data-title="${t.id}">${t.n}</button>`).join('')}<button class="chip" data-title="">Без титула</button></div>`:'')};
 const invHtml=()=>S.invd?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи 3 друзей<small>Награда: 150 🪙 · ${srvOn()?'приглашено':'отправлено'} ${S.inv||0}/3</small></div>${(S.inv||0)>=3?'<button class="btn" data-inv="1">Забрать</button>':`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE()}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`;
@@ -517,6 +522,41 @@ async function refStart(){
   if(!srvOn())return;
   try{if(!S.srvReg){const j=await payPost('/ref/register',{});if(j&&j.ok){S.srvReg=1;save()}}}catch(e){}
   refSync(true);
+}
+// ===== Друзья, профили, ID игрока (сервер: Cloudflare Worker) =====
+const softRender=t=>{if(tab!==t)return;const ae=document.activeElement;if(ae&&ae.id==='fid')return;render()};
+const profData=()=>({nick:S.nick||'',icon:S.icon||0,title:(TITLES.find(t=>t.id===S.title&&t.ok())||{}).id||'',xp:S.xp||0,rd:S.rd||0});
+async function profSync(force){
+  if(!srvOn()||!S.reg||!S.nick||profSync.busy)return;
+  const d=profData(),k=JSON.stringify(d);
+  if(!force&&profSync.k===k)return;
+  profSync.busy=1;
+  try{const j=await payPost('/profile/sync',d);
+    if(j&&j.ok){profSync.k=k;let ch=false;if(S.pid!==j.id){S.pid=j.id;save();ch=true}if(typeof j.incoming==='number'&&j.incoming!==fInc){fInc=j.incoming;ch=true}if(ch)softRender(tab==='friends'?'friends':'profile')}}catch(e){}
+  profSync.busy=0;
+}
+function profSoon(){try{if(!srvOn())return}catch(e){return}clearTimeout(profSoon.h);profSoon.h=setTimeout(()=>profSync(),15000)}
+async function friendsLoad(){
+  if(!srvOn())return;
+  profSync(true);
+  try{const j=await payPost('/friends/list',{});if(j&&j.ok){frd=j;fInc=j.incoming.length;softRender('friends');if(tab==='profile')softRender('profile')}}catch(e){}
+}
+async function pvOpen(id,back){
+  pvw={loading:1,id};pvBack=back||'friends';tab='pview';render();
+  try{const j=await payPost('/profile/get',{id});pvw=j&&j.ok?j.p:{err:(j&&j.error==='not_found')?'nf':'net'}}catch(e){pvw={err:'net'}}
+  if(tab==='pview')render();
+}
+async function fAct(path,id,extra){
+  try{const j=await payPost(path,{id,...(extra||{})});
+    if(j&&j.ok){if(pvw&&pvw.id===id&&j.rel)pvw.rel=j.rel;render.frT=Date.now();friendsLoad();render();return j}
+    const M={not_found:'Игрок не найден',self:'Это твой ID',my_limit:'У тебя уже максимум друзей',their_limit:'У игрока уже максимум друзей',too_many_requests:'Слишком много исходящих заявок'};
+    toast(M[j&&j.error]||'Не получилось, попробуй позже')
+  }catch(e){toast('Нет связи с сервером')}
+  return null;
+}
+async function admOpen(){
+  if(!srvOn()){toast('Список игроков доступен только в Telegram');return}
+  try{const j=await payPost('/admin/players',{});if(j&&j.ok){admD=j;tab='admin';render()}}catch(e){}
 }
 const SKN={classic:'Классическое',halloween:'Зомби Пугало',golden:'Золотой Жнец'};
 const MSK10=7*36e5; // 10:00 по Москве (UTC+3, без перехода на летнее время) = 07:00 UTC
@@ -638,6 +678,7 @@ function applyTheme(){const r=document.documentElement;const t=(S.theme==='light
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
 function save(){
   if(window.resetting)return;
+  profSoon();
   let snapshot;
   try{
     save.ts=Math.max(Date.now(),(save.ts||0)+1);const stateToSave={...S,plots:Array.isArray(S.plots)?S.plots.map(p=>({...p})):[],_ts:save.ts};
@@ -654,7 +695,7 @@ function render(){
   document.getElementById('coins').textContent=S.coins;document.getElementById('cr').textContent=S.cr||0;
   const v=document.getElementById('view'),h=document.getElementById('hint');
   document.querySelector('header').style.display=(['menu','welcome','intro'].includes(tab))?'none':'flex';
-  {const bk=document.querySelector('.back'),tg=(tab==='gh'||tab==='skins');bk.dataset.go=tg?'field':'menu';bk.textContent=tg?'← Ферма':'← Меню'}
+  {const bk=document.querySelector('.back'),to=tab==='pview'?pvBack:(tab==='friends'||tab==='admin')?'profile':(tab==='gh'||tab==='skins')?'field':'menu';bk.dataset.go=to;bk.textContent={field:'← Ферма',menu:'← Меню',profile:'← Профиль',friends:'← Друзья'}[to]}
   if(render.k!==tab+btab+ptab){render.k=tab+btab+ptab;v.classList.remove('anim');void v.offsetWidth;v.classList.add('anim')}
   if(tab==='menu'){
     v.innerHTML=`<div class="menu"><button class="nick" data-go="profile">${esc(S.nick||'')}</button><div class="tools"><button class="ico" data-go="season">📅${S.ss!==Math.floor(sT()/SDAY)?'<em>!</em>':''}</button><div class="rc"><button class="ico" data-go="quests">✉️${S.q.length?'<em>'+(S.q.length>10?'10+':S.q.length)+'</em>':''}</button><a class="tgb" data-tgl="1" href="https://t.me/FarmLand_news" target="_blank" rel="noopener noreferrer" aria-label="Новости игры"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 4L3 11l6 2 2 6 3-4 4 3z" style="fill:var(--on)"/></svg></a></div></div><div class="mid"><div class="mgrid"><button class="wide" data-go="field">Ферма</button><button class="wide w2" data-go="barn">Амбар</button><button class="wide w3" data-go="pass">Farm Pass</button></div></div><div class="mb"><button class="sq" data-go="settings"><b>⚙️</b><span>Настройки</span></button><button class="sq" data-go="shop"><b>🛒</b><span>Магазин</span></button></div></div>`;
@@ -666,12 +707,40 @@ function render(){
   }
   if(tab==='profile'){
     h.textContent='Профиль';
+    if(srvOn()&&(!S.pid||!render.pT||Date.now()-render.pT>30000)){render.pT=Date.now();profSync(true)}
     const L=lvl(),a=LX[L-1],b=L<20?LX[L]:a,pr=L<20?Math.round((S.xp-a)/(b-a)*100):100;
-    v.innerHTML=`<div class="prof"><button class="pic" data-pickt="1">${ICONS[S.icon||0]}</button>${pick?`<div class="seeds">${ICONS.map((ic,i)=>(i<3||(S.picons||[]).includes(i))?`<button class="chip" style="font-size:28px" data-icon="${i}">${ic}</button>`:'').join('')}</div>`:'<small class="lbl">Нажми на иконку, чтобы сменить</small>'}<div class="pname">${esc(S.nick||'')}</div>${titleHtml()}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-S.xp)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${S.xp}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${new Date(S.rd||Date.now()).toLocaleDateString('ru-RU')}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${medalHtml()}<div class="slot"></div><div class="slot"></div></div>`;
+    v.innerHTML=`<div class="prof"><button class="pic" data-pickt="1">${ICONS[S.icon||0]}</button>${pick?`<div class="seeds">${ICONS.map((ic,i)=>(i<3||(S.picons||[]).includes(i))?`<button class="chip" style="font-size:28px" data-icon="${i}">${ic}</button>`:'').join('')}</div>`:'<small class="lbl">Нажми на иконку, чтобы сменить</small>'}<button class="pname" data-nt="1">${esc(S.nick||'')}</button>${titleHtml()}</div>${`<button class="row crow" data-go="friends"><span class="ic">👥</span><span class="t">Друзья<small>${fInc?'Новых заявок: '+fInc:'Список друзей и заявки'}</small></span></button>`}<div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-S.xp)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${S.xp}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${new Date(S.rd||Date.now()).toLocaleDateString('ru-RU')}</small></div></div><div class="row"><div class="t">ID игрока<small>${S.pid||(srvOn()?'появится через пару секунд':'появится в Telegram')}</small></div>${S.pid?'<button class="btn" data-copyid="1">Копировать</button>':''}</div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${medalHtml()}<div class="slot"></div><div class="slot"></div></div>`;
     return;
   }
   if(tab==='intro'){
     v.innerHTML=`<div class="menu"><div class="mid" style="padding-top:0"><div class="letter"><div style="font-size:48px;text-align:center">✉️</div><p><b>${esc(S.nick||'')}</b>, добро пожаловать в нашу деревню!</p><p>Ферма на окраине давно пустует, и мы надеемся, что именно ты вернёшь ей жизнь. Вот стартовый капитал: <b>150 🪙</b>. Купи пугало, посади первые семена и не бойся ворон.</p><p class="sign">С уважением, мэр деревни</p></div><button class="wide" style="margin-top:14px;width:100%" data-gift="1">Забрать письмо и начать</button></div></div>`;
+    return;
+  }
+  if(tab==='friends'){
+    h.textContent='Друзья';
+    if(!render.frT||Date.now()-render.frT>15000){render.frT=Date.now();friendsLoad()}
+    const F=frd||{friends:[],incoming:[],outgoing:[]},old=document.getElementById('fid'),ov=old?old.value:'';
+    const prow=(p,sub)=>`<button class="row crow" data-pview="${p.id}"><span class="ic">${ICONS[p.icon]||ICONS[0]}</span><span class="t">${esc(p.nick||'—')}<small>${sub}</small></span></button>`;
+    let html=`<div class="row"><div class="t">Твой ID<small>${S.pid||'загрузка…'}</small></div>${S.pid?'<button class="btn" data-copyid="1">Копировать</button>':''}</div><p class="lbl" style="margin-top:14px">Добавить друга по ID</p><input id="fid" class="nick" inputmode="numeric" maxlength="12" placeholder="ID игрока" autocomplete="off" value="${esc(ov)}" style="margin:0 0 10px"><button class="btn" style="width:100%" data-fsearch="1">Найти</button>`;
+    if(F.incoming.length)html+=`<div class="sec">Заявки · ${F.incoming.length}</div>`+F.incoming.map(p=>`<div class="row"><button class="t" data-pview="${p.id}"><b>${esc(p.nick||'—')}</b><small>Хочет добавить тебя в друзья</small></button><button class="btn" data-facc="${p.id}">✓</button><button class="btn" style="background:var(--soil)" data-fdec="${p.id}">✕</button></div>`).join('');
+    html+=`<div class="sec">Друзья · ${F.friends.length}</div>`+(F.friends.length?F.friends.map(p=>prow(p,'Уровень '+lvlX(p.xp)+' · ID '+p.id)).join(''):'<div class="empty-msg" style="padding:16px 8px">Пока никого. Найди друга по ID.</div>');
+    if(F.outgoing.length)html+=`<div class="sec">Отправленные заявки · ${F.outgoing.length}</div>`+F.outgoing.map(p=>prow(p,'Ожидает ответа · ID '+p.id)).join('');
+    v.innerHTML=html;
+    return;
+  }
+  if(tab==='pview'){
+    h.textContent=pvw&&pvw.nick?'Профиль ('+pvw.nick+')':'Профиль';
+    if(!pvw||pvw.loading){v.innerHTML='<div class="empty-msg">Загрузка…</div>';return}
+    if(pvw.err){v.innerHTML='<div class="empty-msg">'+(pvw.err==='nf'?'Игрок с таким ID не найден':'Не удалось загрузить профиль')+'</div>';return}
+    const P=pvw,x=P.xp||0,L=lvlX(x),a=LX[L-1],b=L<20?LX[L]:a,pr=L<20?Math.round((x-a)/(b-a)*100):100,tt=TITLES.find(t=>t.id===P.title);
+    const act=P.rel==='self'?'':P.rel==='friend'?`<button class="btn" style="width:100%;margin-top:14px;background:var(--soil)" data-frm="${P.id}">Удалить из друзей</button>`:P.rel==='out'?`<p class="lbl" style="margin-top:14px">Заявка отправлена</p><button class="btn" style="width:100%;background:var(--soil)" data-frm="${P.id}">Отменить заявку</button>`:P.rel==='in'?`<p class="lbl" style="margin-top:14px">Хочет добавить тебя в друзья</p><div style="display:flex;gap:10px"><button class="btn" style="flex:1" data-facc="${P.id}">Принять</button><button class="btn" style="flex:1;background:var(--soil)" data-fdec="${P.id}">Отклонить</button></div>`:`<button class="btn" style="width:100%;margin-top:14px" data-fadd="${P.id}">Добавить в друзья</button>`;
+    v.innerHTML=`<div class="prof"><div class="pic st">${ICONS[P.icon]||ICONS[0]}</div><div class="pname">${esc(P.nick||'')}</div>${tt?`<div class="gold">${tt.n}</div>`:''}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-x)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${x}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${P.rd?new Date(P.rd).toLocaleDateString('ru-RU'):'—'}</small></div></div><div class="row"><div class="t">ID игрока<small>${P.id}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${vetFor(P.rd)?'<button class="ach" data-pmedal="1"><span class="ic">🎖️</span></button>':'<div class="slot"></div>'}<div class="slot"></div><div class="slot"></div></div>${act}`;
+    return;
+  }
+  if(tab==='admin'){
+    h.textContent='Игроки (временно)';
+    const A=admD||{total:0,list:[]},fd=t=>t?new Date(t).toLocaleDateString('ru-RU'):'—';
+    v.innerHTML=`<p class="lbl">Всего игроков: <b>${A.total}</b>${typeof A.updated==='number'?' · уже с новой версией: <b>'+A.updated+'</b>':''}${A.list.length<A.total?' · показаны последние '+A.list.length:''}</p>`+A.list.map(p=>p.pid?`<div class="row"><span class="ic">${ICONS[p.icon]||ICONS[0]}</span><div class="t"><b>${esc(p.nick||'—')}</b><small>ID ${p.pid} · ур. ${lvlX(p.xp)} · с ${fd(p.rd||p.created)} · был ${fd(p.seen)}</small></div></div>`:`<div class="row"><span class="ic">👤</span><div class="t"><b>—</b><small>ещё не открывал новую версию · в игре с ${fd(p.created)}</small></div></div>`).join('');
     return;
   }
   if(tab==='season'){
@@ -766,6 +835,15 @@ document.getElementById('view').addEventListener('click',e=>{
   if(d.go){tab=d.go;render();return}
   else if(d.promodot!==undefined){const rail=document.getElementById('promos');if(rail){const i=+d.promodot;const card=rail.querySelectorAll('.pcard')[i];if(card)card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});rail.querySelectorAll('.pcard').forEach((c,j)=>{const dot=document.querySelector('[data-promodot="'+j+'"]');if(dot)dot.classList.toggle('on',j===i)})}return}
   else if(d.tg){const u='https://t.me/FarmLand_news';if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}
+  else if(d.nt){const n=Date.now();ntC=(n-ntT>2500)?1:ntC+1;ntT=n;if(ntC>=10){ntC=0;admOpen()}return}
+  else if(d.copyid){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(S.pid||'').then(()=>toast('ID скопирован'),()=>toast('Твой ID: '+S.pid));else toast('Твой ID: '+S.pid);return}
+  else if(d.fsearch){if(!srvOn()){toast('Друзья работают только внутри Telegram');return}const id=((document.getElementById('fid')||{}).value||'').replace(/\D/g,'');if(id.length<5){toast('Введи ID: минимум 5 цифр');return}if(id===S.pid){toast('Это твой ID');return}pvOpen(id,'friends');return}
+  else if(d.pview){pvOpen(d.pview,'friends');return}
+  else if(d.fadd){fAct('/friends/request',d.fadd).then(j=>{if(j)toast(j.rel==='friend'?'Вы теперь друзья!':'Заявка отправлена')});return}
+  else if(d.facc){fAct('/friends/respond',d.facc,{accept:true}).then(j=>{if(j)toast('Вы теперь друзья!')});return}
+  else if(d.fdec){fAct('/friends/respond',d.fdec,{accept:false}).then(j=>{if(j)toast('Заявка отклонена')});return}
+  else if(d.frm){if(b.dataset.c!=='1'){b.dataset.c='1';b.textContent='Нажми ещё раз';return}fAct('/friends/remove',d.frm).then(j=>{if(j)toast('Готово')});return}
+  else if(d.pmedal){toast('Медаль ветерана: игрок с нами больше года');return}
   else if(d.theme){S.theme=d.theme;applyTheme()}
   else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;b.textContent='Сбрасываем…';window.resetting=true;cloudEpoch++;cloudPending=null;(async()=>{try{await cloudWriteQueue;await clearCloud();try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(err){window.resetting=false;b.disabled=false;b.textContent='Сбросить прогресс';window.rs=0;toast('Не удалось очистить облачное сохранение. Попробуй ещё раз внутри Telegram.');console.error(err)}})();return}
   else if(d.btab){btab=d.btab}
@@ -820,8 +898,9 @@ document.getElementById('view').addEventListener('click',e=>{
 document.addEventListener('click',e=>{const a=e.target.closest('a[data-tgl],a[data-story],a[data-ext]');if(!a)return;if(a.dataset.invadd&&!srvOn()){S.inv=Math.min(3,(S.inv||0)+1);save();setTimeout(render,500)}if(!TG)return;if(a.dataset.ext&&TG.openLink){e.preventDefault();TG.openLink(a.href);return}if((a.dataset.tgl||a.dataset.story)&&TG.openTelegramLink){e.preventDefault();TG.openTelegramLink(a.href)}});
 if(S.ss===undefined)S.ss=Math.floor(sT()/SDAY);
 if(TG){try{TG.ready();TG.expand();if(TG.disableVerticalSwipes)TG.disableVerticalSwipes();TG.onEvent('themeChanged',applyTheme)}catch(e){}}
-(async()=>{await syncTime(true);refStart();claimPaid()})();
+(async()=>{await syncTime(true);refStart();claimPaid();profSync(true)})();
 setInterval(()=>syncTime(),600000);
+setInterval(()=>profSync(),120000);
 {const leave=()=>{if(window.resetting)return;save();flushCloudNow()};
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')leave();else{syncTime();refSync()}});
 addEventListener('pagehide',leave);addEventListener('beforeunload',leave);
