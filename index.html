@@ -301,6 +301,12 @@ button.tk{width:100%;border:0;font:inherit;color:inherit;text-align:left;cursor:
 #toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%}
 #toast.on{opacity:1}
 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea{-webkit-user-select:text;user-select:text}
+.seeds.lang .chip{font-size:13px;padding:5px 12px;border-radius:10px}
+.prof{position:relative}
+.frb{position:absolute;top:0;right:0;background:var(--panel);border-radius:12px;font-size:20px;padding:6px 10px}
+a.yt{width:36px;height:36px;border-radius:10px;background:#e0564f;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.wide{position:relative}
+.wide em{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#d9534f;color:#fff;font:800 12px/20px Nunito,system-ui,sans-serif;font-style:normal;text-align:center}
 </style>
 <script>
 /* no-zoom: pinch, double-tap, iOS gestures */
@@ -334,6 +340,90 @@ async function syncTime(force){
     if(j&&typeof j.now==='number'){_tb={s:j.now+(p1-p0)/2,p:p1};_tSync=p1}}catch(e){}
   clearTimeout(to);
 }
+/*i18n*/
+const lang=()=>{try{return S.lang==='en'?'en':'ru'}catch(e){return 'ru'}};
+const LOC=()=>lang()==='en'?'en-GB':'ru-RU';
+// Словарь RU -> EN. Ключ = русский текст как на экране. {0},{1} = подставляемые значения (порядок по возрастанию).
+// Новый русский текст в игре: добавь сюда строку 'русский':'english', иначе он останется русским.
+const EN=Object.assign(Object.create(null),{
+'← Ферма':'← Farm','← Меню':'← Menu','← Профиль':'← Profile','← Друзья':'← Friends',
+'Ферма':'Farm','Амбар':'Barn','Настройки':'Settings','Магазин':'Shop','Новости игры':'Game news',
+'Добро пожаловать в FarmLand!':'Welcome to FarmLand!','Придумай ник для своей фермы':'Choose a nickname for your farm','Твой ник':'Your nickname','Начать':'Start',
+'Профиль':'Profile','Друзья':'Friends','Профиль ({0})':'Profile ({0})','Игроки (временно)':'Players (temporary)','Календарь сезонов':'Season calendar','Письма':'Letters','Пугало':'Scarecrow','Теплица':'Greenhouse',
+'Теплица: любые культуры в любой сезон':'Greenhouse: any crop in any season','Выбери семена, нажми на пустую грядку':'Pick seeds, tap an empty bed','Рынок':'Market','Достижения':'Achievements','Продавай урожай за монеты':'Sell your harvest for coins','Урожай':'Harvest',
+'Мэр открыл школу, и для кухни нужны продукты. Нужно: {0} ед. {1}.':'The mayor opened a school and the kitchen needs supplies. Needed: {0} × {1}.',
+'Кафе на площади готовит обед для ярмарки. Нужно: {0} ед. {1}.':'The café on the square is preparing lunch for the fair. Needed: {0} × {1}.',
+'Соседка просит помочь с заготовками. Нужно: {0} ед. {1}.':'Your neighbor asks for help with preserves. Needed: {0} × {1}.',
+'В детском саду утренник, нужны угощения. Нужно: {0} ед. {1}.':'The kindergarten is having a party and needs treats. Needed: {0} × {1}.',
+'Торговец с рынка просит срочную партию. Нужно: {0} ед. {1}.':'A market trader wants a rush order. Needed: {0} × {1}.',
+'Мэр':'Mayor','Кафе на площади':'Town square café','Соседка':'Neighbor','Детский сад':'Kindergarten','Торговец с рынка':'Market trader',
+'Заказы жителей':'Villagers’ orders','Награда: {0}':'Reward: {0}','в амбаре {0}':'in barn {0}','Сдать':'Deliver','Новых писем пока нет.':'No new letters yet.','Пригласи {0} друзей':'Invite {0} friends','приглашено {0}':'invited {0}','отправлено {0}':'sent {0}','Позвать':'Invite','Забрать':'Claim','Забрать +{0}':'Claim +{0}',
+'Нажми на иконку, чтобы сменить':'Tap the icon to change it','ID: {0}':'ID: {0}','появится в Telegram':'will appear in Telegram','Без титула':'No title','Титулы':'Titles','новых заявок: {0}':'new requests: {0}',
+'Уровень {0}':'Level {0}','максимум':'max','До следующего: {0} опыта':'To next level: {0} XP','Максимальный уровень':'Max level','Всего опыта':'Total XP','Дата регистрации':'Registration date','Медали':'Medals','{0} опыта':'{0} XP',
+'Твой ID':'Your ID','загрузка…':'loading…','Копировать':'Copy','Добавить друга по ID':'Add a friend by ID','ID игрока':'Player ID','Найти':'Find','Заявки':'Requests','Хочет добавить тебя в друзья':'Wants to add you as a friend','Пока никого. Найди друга по ID.':'No one yet. Find a friend by ID.','Отправленные заявки':'Sent requests','Ожидает ответа':'Awaiting reply',
+'Загрузка…':'Loading…','Игрок с таким ID не найден':'No player with this ID found','Не удалось загрузить профиль':'Could not load the profile','Удалить из друзей':'Remove from friends','Заявка отправлена':'Request sent','Отменить заявку':'Cancel request','Принять':'Accept','Отклонить':'Decline','Добавить в друзья':'Add as friend','Нажми ещё раз':'Tap again',
+'Всего игроков:':'Total players:','· уже с новой версией:':'· already on the new version:','· показаны последние {0}':'· showing the last {0}','ещё не открывал новую версию':'has not opened the new version yet','в игре с {0}':'playing since {0}','ур. {0}':'lvl {0}','с {0}':'since {0}','был {0}':'last seen {0}',
+'До конца сезона: {0}':'Season ends in: {0}','Весна':'Spring','Лето':'Summer','Осень':'Autumn','Зима':'Winter','Каждый сезон длится 14 дней. В теплице растёт всё в любой сезон.':'Each season lasts 14 days. Everything grows in the greenhouse in any season.',
+'Картошка':'Potato','Пшеница':'Wheat','Кукуруза':'Corn','Помидор':'Tomato','Клубника':'Strawberry','Тыква':'Pumpkin',
+'Неприхотливая классика. Быстро растёт и даёт до 4 клубней.':'An undemanding classic. Grows fast and yields up to 4 tubers.','Переносит холода. Зерно для мельницы и пекарни.':'Tolerates the cold. Grain for the mill and the bakery.','Любит тёплое лето. Даёт немного, но крупные початки.':'Loves warm summers. Yields little, but the cobs are big.','Сочный летний овощ. Растёт дольше картошки.':'A juicy summer vegetable. Takes longer to grow than potatoes.','Сладкая и дорогая ягода. Растёт дольше помидора, зато ценится выше.':'A sweet, pricey berry. Takes longer than tomatoes but sells for more.','Растёт медленно, зато самая крупная. Осенью её ждут особенно.':'Slow to grow, but the biggest of all. Especially anticipated in autumn.',
+'Классическое':'Classic','Зомби Пугало':'Zombie Scarecrow','Золотой Жнец':'Golden Reaper','Спугнуто ворон: {0}':'Crows scared off: {0}','Выбрано':'Selected','Выбрать':'Select','Скидка 100% в магазине':'100% off in the shop','Акция в магазине с 30 октября':'On sale in the shop from October 30','Акция завершилась':'The promotion has ended','Доступно в Farm Pass Premium':'Available in Farm Pass Premium','Недоступно':'Unavailable',
+'Пугало: {0}':'Scarecrow: {0}','Пугало сломалось':'Scarecrow broken','Пугала нет':'No scarecrow','Купить':'Buy',
+'Новое начало':'A Fresh Start','Сезон 1':'Season 1','до конца {0}':'ends in {0}','сезон завершён':'season ended','уровень':'level','до уровня {0}: ещё {1}':'{1} more to level {0}','максимальный уровень':'max level','Premium активен до конца сезона':'Premium is active until the end of the season','Открыть Premium':'Unlock Premium','Premium закончился вместе с сезоном':'Premium ended with the season',
+'Задания':'Tasks','Награды':'Rewards','Что это?':'What is this?','Выполняй задания и получай звёзды, за которые можно открывать награды!':'Complete tasks to earn stars you can spend on rewards!','Ежедневные':'Daily','Еженедельные':'Weekly','Обычная':'Free',
+'Собрать {0} ед. урожая':'Harvest {0} crops','Посадить {0} растений':'Plant {0} crops','Продать {0} ед. урожая':'Sell {0} crops','Заработать {0} монет':'Earn {0} coins','Выполнить {0} письмо':'Complete {0} letter','Выполнить {0} письма':'Complete {0} letters',
+'Награда получена':'Reward claimed','Выполнено! Нажми, чтобы забрать':'Done! Tap to claim','Прогресс {0} из {1}':'Progress {0} of {1}','Скин пугала':'Scarecrow skin','Иконка':'Icon','Получено':'Claimed','Закрыто':'Locked','скин':'skin','Скин':'Skin','иконка':'icon',
+'Ник: {0}':'Nickname: {0}','Новый ник':'New nickname','Сменить ник':'Change nickname','Тема':'Theme','Авто':'Auto','Светлая':'Light','Тёмная':'Dark','YouTube-канал игры':'Game’s YouTube channel','Сбросить прогресс':'Reset progress','Версия: {0}':'Version: {0}','Нажми ещё раз: всё сотрётся':'Tap again: everything will be erased','Сбрасываем…':'Resetting…',
+'В теплице растёт всё и в любой сезон, а вороны её не трогают.':'Everything grows in the greenhouse in any season, and crows leave it alone.','Нужно: {0} уровень (у тебя {1}) и {2} 🪙':'Required: level {0} (you have {1}) and {2} 🪙','Открыть теплицу':'Open greenhouse','Семян нет, загляни в магазин':'No seeds, check the shop','На огород':'To the garden','Собрать':'Harvest',
+'Акции':'Deals','Семена':'Seeds','Кристаллы':'Crystals','Растёт {0}':'Grows in {0}','запас {0}':'stock {0}','Доступно: {0}':'Available: {0}','Максимум':'Max','СКИДКА 24%':'24% OFF','Кристаллы 50x':'Crystals 50x','СКИДКА 100%':'100% OFF','Хэллоуинский скин для пугала':'Halloween scarecrow skin','Иконка «Тыква»':'“Pumpkin” icon','Новая иконка профиля':'New profile icon','Страницы акций':'Deal pages','Акция {0}':'Deal {0}',
+'Старт через {0}':'Starts in {0}','До конца {0}':'Ends in {0}','Акция завершена':'Promotion ended',
+'На рынке спокойно':'The market is calm','мин {0}':'min {0}','макс {0}':'max {0}','6 ч':'6 h','1 д':'1 d','3 д':'3 d',
+'Засуха':'Drought','Рекордный урожай':'Bumper harvest','Всплеск спроса':'Demand surge','Шторм':'Storm',
+'Ожидается засуха. Урожай ({0}) может сократиться, цены вырастут.':'A drought is expected. The harvest ({0}) may shrink and prices will rise.','Засуха: {0}. Урожай сокращён, цены выросли.':'Drought: {0}. The harvest is reduced and prices are up.',
+'На рынок поступила рекордная партия: {0}. Цены падают.':'A record batch hit the market: {0}. Prices are falling.',
+'Спрос на {0} растёт в преддверии праздника.':'Demand for {0} is rising ahead of the holiday.','Высокий спрос: {0}. Цены выше обычного.':'High demand: {0}. Prices are above normal.',
+'Синоптики обещают шторм. Возможен рост цен: {0}.':'Forecasters predict a storm. Prices may rise: {0}.','Шторм сократил поставки: {0}. Цены растут.':'The storm cut supplies: {0}. Prices are rising.',
+'{0}: событие завершено, цены возвращаются к обычным ({1})':'{0}: event over, prices are returning to normal ({1})','Ожидается через {0}':'Expected in {0}','Идёт, ещё {0}':'Ongoing, {0} left','Завершено':'Ended',
+'Пока пусто. Собери урожай на грядках.':'Nothing here yet. Harvest crops from your beds.','{0} шт.':'{0} pcs','Продать':'Sell','Продано':'Sold','Всё продано':'All sold',
+'Золотой урожай':'Golden Harvest','Магнат':'Tycoon','Золотой урожай {0}':'Golden Harvest {0}','Магнат {0}':'Tycoon {0}','Хозяин полей':'Lord of the Fields','Предприниматель':'Entrepreneur',
+'{0}: собрать {1} ед. урожая':'{0}: harvest {1} crops','{0}: заработать {1} монет':'{0}: earn {1} coins','{0}: собрать {1} ед. урожая ({2})':'{0}: harvest {1} crops ({2})','{0}: заработать {1} монет ({2})':'{0}: earn {1} coins ({2})','{0}: достигнут максимальный уровень':'{0}: max level reached',
+'Достижение: {0}!':'Achievement: {0}!','Новый титул: {0}':'New title: {0}','Достижение разблокировано':'Achievement unlocked','Похвастаться в Telegram':'Show off in Telegram','Закрыть':'Close',
+'Я получил достижение «{0}» в Pocket FarmLand! Играть: @pocketfarmland_bot':'I earned the “{0}” achievement in Pocket FarmLand! Play: @pocketfarmland_bot',
+'Заходи в Pocket FarmLand!':'Join Pocket FarmLand!','Заходи в Pocket FarmLand: уютная ферма прямо в Telegram! Сажай культуры, продавай урожай и собирай награды. Играть: @pocketfarmland_bot':'Join Pocket FarmLand: a cozy farm right in Telegram! Plant crops, sell your harvest and collect rewards. Play: @pocketfarmland_bot',
+', добро пожаловать в нашу деревню!':', welcome to our village!','Ферма на окраине давно пустует, и мы надеемся, что именно ты вернёшь ей жизнь. Вот стартовый капитал:':'The farm on the edge of town has stood empty for a long time, and we hope you are the one to bring it back to life. Here is your starting capital:','. Купи пугало, посади первые семена и не бойся ворон.':'. Buy a scarecrow, plant your first seeds and don’t fear the crows.','С уважением, мэр деревни':'Sincerely, the village mayor','Забрать письмо и начать':'Collect the letter and start',
+'Облако не отвечает; прогресс сохранён локально, повторю позже':'The cloud is not responding; progress saved locally, will retry later','Прогресс не сохраняется: хранилище недоступно':'Progress is not being saved: storage unavailable','Покупка получена ✓':'Purchase received ✓','Оплата Stars заработает внутри Telegram после подключения бота':'Stars payments will work inside Telegram once the bot is connected','Premium уже куплен':'Premium already purchased','Это предложение на этой неделе уже куплено':'This offer has already been bought this week','Оплата не прошла':'Payment failed','Не удалось создать счёт, попробуй позже':'Could not create the invoice, try again later',
+'Сезон завершён':'Season ended','Задание ещё не выполнено':'Task not completed yet','Farm Pass: уровень {0}!':'Farm Pass: level {0}!','Уровень ещё не достигнут':'Level not reached yet','Нужен Premium':'Premium required','Список игроков доступен только в Telegram':'The player list is only available in Telegram',
+'Новое письмо ✉️':'New letter ✉️','Пугало спугнуло ворону 🐦':'The scarecrow scared off a crow 🐦','Ворона склевала урожай! 🐦':'A crow pecked up a crop! 🐦','Сезон закончился, растения погибли: {0}':'The season ended, plants died: {0}',
+'Игрок не найден':'Player not found','Это твой ID':'That’s your ID','У тебя уже максимум друзей':'You already have the maximum number of friends','У игрока уже максимум друзей':'This player already has the maximum number of friends','Слишком много исходящих заявок':'Too many outgoing requests','Не получилось, попробуй позже':'Something went wrong, try again later','Нет связи с сервером':'No connection to the server','Нет связи с сервером, попробуй позже':'No connection to the server, try again later',
+'Медаль ветерана: игрок с нами больше года':'Veteran medal: this player has been with us for over a year','Медаль ветерана: ты с нами больше года':'Veteran medal: you’ve been with us for over a year','Медаль ветерана: придёт через год после регистрации, {0}':'Veteran medal: arrives one year after registration, {0}','Медаль ветерана выдаётся тем, кто зарегистрировался до 1 января 2027':'The veteran medal is given to those who registered before January 1, 2027',
+'ID ещё не присвоен, подожди пару секунд':'ID not assigned yet, wait a few seconds','ID скопирован: {0}':'ID copied: {0}','Друзья работают только внутри Telegram':'Friends only work inside Telegram','Введи ID: минимум 5 цифр':'Enter an ID: at least 5 digits','Вы теперь друзья!':'You are now friends!','Заявка отклонена':'Request declined','Готово':'Done',
+'Нужно {0} монет':'You need {0} coins','Ник: минимум 2 символа':'Nickname: at least 2 characters','Ник изменён':'Nickname changed','Получено: 150 монет':'Received: 150 coins','Акция уже завершилась':'The promotion has already ended','Получена иконка 🎃':'Icon received 🎃','Не хватает кристаллов':'Not enough crystals','Получен скин «Зомби Пугало»':'Skin “Zombie Scarecrow” received',
+'Награда уже получена':'Reward already claimed','Пока приглашено меньше {0} друзей':'Fewer than {0} friends invited so far','Титулов пока нет: получай достижения':'No titles yet: earn achievements','Нужен {0} уровень':'Level {0} required','Теплица открыта!':'Greenhouse opened!','Не хватает урожая':'Not enough crops',
+'Задание выполнено: +{0} 🪙, +{1} опыта':'Task completed: +{0} 🪙, +{1} XP','Новый уровень: {0}!':'New level: {0}!','Сначала выбери семена внизу':'Select seeds below first','Нет семян, купи в магазине':'No seeds, buy some in the shop','Не сезон: {0}':'Out of season: {0}','Собрано: {0}':'Harvested: {0}','Не хватает монет: нужно {0}':'Not enough coins: need {0}',
+'Пока тебя не было, созрело: {0}':'While you were away, ripened: {0}','Что-то пошло не так, попробуй перезайти':'Something went wrong, try reopening the game','Не удалось очистить облачное сохранение. Попробуй ещё раз внутри Telegram.':'Could not clear the cloud save. Try again inside Telegram.'
+});
+const PAT=Object.keys(EN).filter(k=>k.includes('{')).sort((a,b)=>b.replace(/\{\d\}/g,'').length-a.replace(/\{\d\}/g,'').length).map(k=>({re:new RegExp('^'+k.replace(/[.*+?^$()|[\]\\]/g,'\\$&').replace(/\{\d\}/g,'(.+?)')+'$'),to:EN[k]}));
+const CY=/[А-Яа-яЁё]/;
+function T1(k){
+  if(EN[k]!==undefined)return EN[k];
+  if(k.includes(' · '))return k.split(' · ').map(x=>CY.test(x)?T1(x):x).join(' · ');
+  for(const p of PAT){const x=k.match(p.re);if(x)return p.to.replace(/\{(\d)\}/g,(_,i)=>T(x[+i+1]))}
+  if(k.includes(', ')){const q=k.split(', ').map(T1);if(!q.some(x=>CY.test(x)))return q.join(', ')}
+  const e=k.match(/^([^\p{L}]+)(\p{L}[\s\S]*)$/u);if(e){const r=T1(e[2]);if(r!==e[2])return e[1]+r}
+  return k;
+}
+function T(s){
+  if(typeof s!=='string'||!CY.test(s)||lang()!=='en')return s;
+  const m=s.match(/^(\s*)([\s\S]*?)(\s*)$/),r=T1(m[2]);return r===m[2]?s:m[1]+r+m[3];
+}
+function trNode(n){
+  if(n.nodeType===3){const v=T(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;return}
+  if(n.nodeType!==1)return;
+  trAttr(n,'aria-label');trAttr(n,'placeholder');n.childNodes.forEach(trNode);
+}
+function trAttr(n,a){const v=n.getAttribute&&n.getAttribute(a);if(v){const w=T(v);if(w!==v)n.setAttribute(a,w)}}
+new MutationObserver(ms=>{if(lang()!=='en')return;ms.forEach(m=>{if(m.type==='characterData')trNode(m.target);else if(m.type==='attributes')trAttr(m.target,m.attributeName);else m.addedNodes.forEach(trNode)})}).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['aria-label','placeholder']});
+function applyLang(){document.documentElement.lang=lang();if(lang()==='en')trNode(document.body)}
+/*/i18n*/
 const CROPS={
   potato:{name:'Картошка',icon:'🥔',time:600,seed:20,sell:12,xp:1,y:[2,4],s:[0,2]},
   wheat:{name:'Пшеница',icon:'🌾',time:1500,seed:45,sell:55,xp:3,y:[1,1],s:[3,0]},
@@ -454,8 +544,8 @@ SKINS.golden='<svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 8v36M
 const SC=60,ACH={gold:{icon:'🏆',name:'Золотой урожай',txt:'собрать 250 ед. урожая',ok:()=>S.harv>=250},mag:{icon:'💰',name:'Магнат',txt:'заработать 5000 монет',ok:()=>S.earned>=5000}};
 const SVG='<svg viewBox="0 0 40 40" width="36" height="36"><path d="M12 11h16l-3-6H15z" fill="#8a5a2b"/><circle cx="20" cy="15" r="5" fill="#e8c28a"/><path d="M4 23h32M20 20v16" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M13 36l7-8 7 8z" fill="#c98a3a"/></svg>';
 const TABS=()=>`<div class="seeds"><button class="chip ${btab==='crop'?'on':''}" data-btab="crop">Урожай</button><button class="chip ${btab==='ach'?'on':''}" data-btab="ach">Достижения</button></div>`;
-const fmt=s=>{if(s<60)return s+' с';const m=Math.ceil(s/60);return m<60?m+' мин':Math.floor(m/60)+' ч'+(m%60?' '+m%60+' мин':'')};
-const fmtN=n=>n>=1e4?(n/1e3).toFixed(1).replace('.0','')+'K':n.toLocaleString('ru-RU');
+const fmt=s=>{const e=lang()==='en',mn=e?' min':' мин',h=e?' h':' ч';if(s<60)return s+(e?' s':' с');const m=Math.ceil(s/60);return m<60?m+mn:Math.floor(m/60)+h+(m%60?' '+m%60+mn:'')};
+const fmtN=n=>n>=1e4?(n/1e3).toFixed(1).replace('.0','')+'K':n.toLocaleString(LOC());
 const LX=[0,15,40,80,140,220,330,470,640,850,1100,1390,1720,2090,2500,2950,3440,3970,4540,5140];
 const lvl=()=>{let l=1;for(let i=1;i<20;i++)if(S.xp>=LX[i])l=i+1;return l};
 const lvlX=x=>{let l=1;for(let i=1;i<20;i++)if(x>=LX[i])l=i+1;return l};
@@ -465,7 +555,7 @@ const SDAY=14*864e5,GHL=15,GHC=15000;
 const sT=()=>Date.now()-(S.rd||Date.now())+(S.so||0);
 const sIdx=()=>Math.floor(sT()/SDAY)%4;
 const sLeft=()=>SDAY-sT()%SDAY;
-const dl=ms=>{const d=Math.floor(ms/864e5),hh=Math.floor(ms%864e5/36e5);return d>0?d+' дн. '+hh+' ч':hh+' ч'};
+const dl=ms=>{const e=lang()==='en',d=Math.floor(ms/864e5),hh=Math.floor(ms%864e5/36e5),h=e?' h':' ч';return d>0?d+(e?' d ':' дн. ')+hh+h:hh+h};
 const inSeason=id=>CROPS[id].s.includes(sIdx());
 const canBuy=id=>inSeason(id)||S.gh;
 const snames=id=>CROPS[id].s.map(i=>SEAS[i].n).join(', ');
@@ -496,7 +586,7 @@ const chg=(id,n)=>{const a=priceAt(id,nowK()-n),b=price(id),p=Math.round((b-a)/a
 const series=(id,n)=>{const k=nowK(),st=Math.max(1,Math.ceil(n/60)),a=[];for(let i=n;i>=0;i-=st)a.push(priceAt(id,k-i));return a};
 const spark=a=>{const w=70,h=24,mn=Math.min(...a),r=Math.max(...a)-mn||1;return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><polyline points="${a.map((v,i)=>(i/(a.length-1)*w).toFixed(1)+','+(h-2-(v-mn)/r*(h-4)).toFixed(1)).join(' ')}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`};
 const chart=a=>{const w=300,h=90,mn=Math.min(...a),mx=Math.max(...a),r=mx-mn||1;return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:90px" preserveAspectRatio="none"><polyline points="${a.map((v,i)=>(i/(a.length-1)*w).toFixed(1)+','+(h-6-(v-mn)/r*(h-12)).toFixed(1)).join(' ')}" fill="none" stroke="var(--leaf)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><div class="cl"><span>мин ${mn.toFixed(1)}</span><span>макс ${mx.toFixed(1)}</span></div>`};
-const fmtT=m=>m<60?m+' мин':Math.round(m/60)+' ч';
+const fmtT=m=>lang()==='en'?(m<60?m+' min':Math.round(m/60)+' h'):(m<60?m+' мин':Math.round(m/60)+' ч');
 function newsList(k){const out=[];for(const e of evs(k)){const d=EVT[e.t],nm=e.cs.map(c=>CROPS[c].name).join(', '),ann=e.w>0?e.st-e.w:e.st;if(k<ann)continue;let txt,st;if(k<e.st){txt=d.wt(nm);st='Ожидается через '+fmtT((e.st-k)*10)}else if(k<e.st+e.dur){txt=d.on(nm);st='Идёт, ещё '+fmtT((e.st+e.dur-k)*10)}else if(k<e.st+e.dur+SL){txt=d.n+': событие завершено, цены возвращаются к обычным ('+nm+')';st='Завершено'}else continue;out.push({i:d.i,txt,st,t:ann})}return out.sort((a,b)=>b.t-a.t)}
 const drY=(id,n)=>evs(nowK()).some(e=>e.t==='drought'&&evW(e,nowK())>0&&e.cs.includes(id))?Math.max(1,n-1):n;
 function earn(n){S.coins+=n;S.earned+=n}
@@ -510,13 +600,13 @@ const vetOk=()=>vetFor(S.rd);
 const medalHtml=()=>vetOk()?`<button class="ach" data-medal="vet"><span class="ic">🎖️</span></button>`:'<div class="slot"></div>';
 const titleHtml=()=>{const un=TITLES.filter(t=>t.ok()),cur=TITLES.find(t=>t.id===S.title&&t.ok());return (cur?`<div class="gold">${cur.n}</div>`:'')+'<button class="tplus" data-tplus="1" aria-label="Титулы">+</button>'+(tpick?`<div class="seeds">${un.map(t=>`<button class="chip${S.title===t.id?' on':''}" data-title="${t.id}">${t.n}</button>`).join('')}<button class="chip" data-title="">Без титула</button></div>`:'')};
 const REF_ST=[{need:3,cr:5},{need:5,cr:10},{need:15,cr:15}];
-const invHtml=()=>{const d=S.refd||[],n=S.inv||0;return REF_ST.map((s,i)=>d[i]?'':`<div class="row"><span class="ic">👥</span><div class="t">Пригласи ${s.need} друзей<small>Награда: ${s.cr} 💎 · ${srvOn()?'приглашено':'отправлено'} ${Math.min(n,s.need)}/${s.need}</small></div>${n>=s.need?`<button class="btn" data-inv="${i}">Забрать</button>`:`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE()}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`).join('')};
+const invHtml=()=>{const d=S.refd||[],n=S.inv||0,i=REF_ST.findIndex((_,j)=>!d[j]);if(i<0)return '';const s=REF_ST[i],pips=REF_ST.map((_,j)=>d[j]?'●':'○').join('');return `<div class="row"><span class="ic">👥</span><div class="t">Пригласи ${s.need} друзей<small>Награда: ${s.cr} 💎 · ${srvOn()?'приглашено':'отправлено'} ${Math.min(n,s.need)}/${s.need}</small><div class="pips">${pips}</div></div>${n>=s.need?`<button class="btn" data-inv="${i}">Забрать</button>`:`<a class="btn" data-tgl="1" data-invadd="1" href="${SHARE()}" target="_blank" rel="noopener noreferrer">Позвать</a>`}</div>`};
 const REF_BASE='https://t.me/pocketfarmland_bot?startapp=ref_';
 const srvOn=()=>!!(PAY_API&&TG&&TG.initData);
 const myId=()=>{try{return TG.initDataUnsafe.user.id||0}catch(e){return 0}};
 const refLink=()=>srvOn()&&myId()?REF_BASE+myId():'https://t.me/pocketfarmland_bot';
 const SHARE_TXT='Заходи в Pocket FarmLand: уютная ферма прямо в Telegram! Сажай культуры, продавай урожай и собирай награды. Играть: @pocketfarmland_bot';
-const SHARE=()=>'https://t.me/share/url?url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent(SHARE_TXT);
+const SHARE=()=>'https://t.me/share/url?url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent(T(SHARE_TXT));
 async function refSync(force){
   if(!srvOn())return;
   if(!force&&refSync.t&&Date.now()-refSync.t<60000)return;refSync.t=Date.now();
@@ -626,11 +716,11 @@ const PACKS=[{id:'gems30',n:30,st:99},{id:'gems50',n:50,st:125},{id:'gems120',n:
 const SHOP_PACKS=PACKS.filter(k=>k.id!=='gems50');
 async function payPost(path,body){const r=await fetch(PAY_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:TG.initData,...body})});return r.json()}
 async function claimPaid(){if(!PAY_API||!TG||!TG.initData)return;try{const j=await payPost('/claim',{}),ids=[];(j.items||[]).forEach(it=>{ids.push(it.id);S.paid=S.paid||{};if(S.paid[it.id])return;S.paid[it.id]=1;if(it.product==='premium')passInit().prem=true;else{const k=PACKS.find(x=>x.id===it.product);if(k)S.cr=(S.cr||0)+k.n}toast('Покупка получена ✓')});if(ids.length){save();render();payPost('/ack',{ids}).catch(()=>{})}}catch(e){}}
-async function pay(prod){if(!PAY_API||!TG||!TG.openInvoice){toast('Оплата Stars заработает внутри Telegram после подключения бота');return}try{const j=await payPost('/invoice',{product:prod});if(j.error==='already'){toast('Premium уже куплен');return}if(j.error==='limit'){toast('Это предложение на этой неделе уже куплено');return}if(!j.link)throw 0;TG.openInvoice(j.link,st=>{if(st==='paid'){setTimeout(claimPaid,800);setTimeout(claimPaid,4000)}else if(st==='failed')toast('Оплата не прошла')})}catch(e){toast('Не удалось создать счёт, попробуй позже')}}
+async function pay(prod){if(!PAY_API||!TG||!TG.openInvoice){toast('Оплата Stars заработает внутри Telegram после подключения бота');return}try{const j=await payPost('/invoice',{product:prod,lang:lang()});if(j.error==='already'){toast('Premium уже куплен');return}if(j.error==='limit'){toast('Это предложение на этой неделе уже куплено');return}if(!j.link)throw 0;TG.openInvoice(j.link,st=>{if(st==='paid'){setTimeout(claimPaid,800);setTimeout(claimPaid,4000)}else if(st==='failed')toast('Оплата не прошла')})}catch(e){toast('Не удалось создать счёт, попробуй позже')}}
 const premOk=()=>!!(S.pp&&S.pp.prem&&Date.now()<=passEnd(S.pp));
 const WHO=['Мэр','Кафе на площади','Соседка','Детский сад','Торговец с рынка'];
 function fly(t,e){const s=document.createElement('span');s.className='fly';s.textContent=t;s.style.left=((e&&e.clientX)||innerWidth/2)+'px';s.style.top=((e&&e.clientY)||innerHeight/2)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1000)}
-function story(title,share){const old=document.getElementById('story');if(old)old.remove();const el=document.createElement('div');el.id='story';el.className='story';el.innerHTML=`<span class="st-i">🎉</span><div class="st-t"><b>${esc(title)}</b><small>Достижение разблокировано</small></div><a class="btn" data-story="1" data-text="${esc(share)}" href="https://t.me/share/url?url=${encodeURIComponent('https://t.me/pocketfarmland_bot')}&text=${encodeURIComponent(share)}" target="_blank" rel="noopener noreferrer">Похвастаться в Telegram</a><button class="st-x" aria-label="Закрыть">✕</button>`;document.body.appendChild(el);el.querySelector('.st-x').onclick=()=>el.remove();setTimeout(()=>el.remove(),14000)}
+function story(title,share){share=T(share);const old=document.getElementById('story');if(old)old.remove();const el=document.createElement('div');el.id='story';el.className='story';el.innerHTML=`<span class="st-i">🎉</span><div class="st-t"><b>${esc(title)}</b><small>Достижение разблокировано</small></div><a class="btn" data-story="1" data-text="${esc(share)}" href="https://t.me/share/url?url=${encodeURIComponent('https://t.me/pocketfarmland_bot')}&text=${encodeURIComponent(share)}" target="_blank" rel="noopener noreferrer">Похвастаться в Telegram</a><button class="st-x" aria-label="Закрыть">✕</button>`;document.body.appendChild(el);el.querySelector('.st-x').onclick=()=>el.remove();setTimeout(()=>el.remove(),14000)}
 function passInit(){if(!S.pp)S.pp={v:4,st:Date.now(),stars:0,cl:{f:[],p:[]},prem:false,d:{},w:{}};return S.pp}
 function passCheck(){const P=passInit(),di=dayIdx(),wi=Math.floor((di+3)/7);
   if(P.d.day!==di)P.d={day:di,base:snap(),done:[],tasks:genTasks(DT,'dt')};else if(!P.d.tasks)P.d.tasks=genTasks(DT,'dt');
@@ -649,6 +739,7 @@ const tk=(t,per)=>{const pr=Math.min(t.t,stat(t.k)-per.base[t.k]),dn=per.done.in
 const rcard=(tr,i,L,P)=>{const k=tr==='f'?'f':'p',cl=P.cl[k].includes(i),pr=k==='p'&&!premOk(),can=i<=L&&!pr&&!cl,r=rw(tr,i),st=cl?'Получено':can?'Забрать':pr?'Premium':i>L?'Закрыто':'';return `<button class="rw ${k}${cl?' got':''}${window.justPc===tr+':'+i?' pop':''}${can?' can':''}${i>L||pr?' lk':''}" data-pc="${tr}:${i}"><div class="rwl">${r.map(x=>`<span>${x.t==='skin'?'🌾':x.t==='icon'?'🎃':IC[x.t]}<b>${x.t==='skin'?'Скин пугала':x.t==='icon'?'Иконка':x.n}</b></span>`).join('')}</div><small>${st}</small></button>`};
 function checkAch(){passCheck();S.al=S.al||{};for(const k in AT){const L=alv(k);if(S.al[k]===undefined){S.al[k]=L;continue}if(L>S.al[k]){S.al[k]=L;toast('Достижение: '+AT[k].name+' '+R[L]+'!');if(L===3){const t=TITLES.find(x=>x.k===k);if(t)setTimeout(()=>toast('Новый титул: '+t.n),1800)}if(L===3)story(AT[k].name+' '+R[L],'Я получил достижение «'+AT[k].name+' '+R[L]+'» в Pocket FarmLand! Играть: @pocketfarmland_bot');}}}
 const scareHtml=()=>{const w=S.sc.w;return `<div class="scare"><button class="sc ${w>0?'':'off'}" data-scare="1">${SKINS[(S.skins||[]).includes(S.sc.skin)?S.sc.skin:'classic']}</button><div class="sw"><div class="bar2"><i style="width:${w}%"></i></div><small>${w>0?'Пугало: '+w+'%':(S.sc.own?'Пугало сломалось':'Пугала нет')}</small></div>${w>0?'':`<button class="btn" data-buyscare="1">Купить · ${SC} 🪙</button>`}</div>`};
+const passBang=()=>{if(!S.reg||S.gift===false)return false;const P=passInit();passCheck();if(Date.now()>passEnd(P))return false;if(S.pseen!==P.d.day+':'+P.w.wk)return true;return[P.d,P.w].some(q=>(q.tasks||[]).some(t=>!q.done.includes(t.id)&&stat(t.k)-q.base[t.k]>=t.t))};
 function tick(){
   const gemOffer=ensureGemOffer(),gemOfferActive=!!gemOffer;
   if(tick.gemOfferActive!==gemOfferActive){tick.gemOfferActive=gemOfferActive;if(tab==='shop')render()}
@@ -657,6 +748,7 @@ function tick(){
     const passBefore=JSON.stringify(S.pp||null);
     passCheck();
     if(JSON.stringify(S.pp||null)!==passBefore){save();if(tab==='pass')render()}
+    const pb=passBang();if(tick.pb!==pb){tick.pb=pb;if(tab==='menu')render()}
   }
   if(S.reg&&S.gift!==false){const now=Date.now(),gap=()=>(12+Math.random()*12)*36e5;if(!S.qn)S.qn=now+gap();let add=0;while(S.q.length<3&&now>=S.qn){S.q.push(newQuest());S.qn+=gap();add++}if(S.q.length>=3&&now>=S.qn)S.qn=now+gap();if(add){save();toast('Новое письмо ✉️')}}
   if(Date.now()>S.nr){
@@ -707,7 +799,7 @@ function render(){
   {const bk=document.querySelector('.back'),to=tab==='pview'?pvBack:(tab==='friends'||tab==='admin')?'profile':(tab==='gh'||tab==='skins')?'field':'menu';bk.dataset.go=to;bk.textContent={field:'← Ферма',menu:'← Меню',profile:'← Профиль',friends:'← Друзья'}[to]}
   if(render.k!==tab+btab+ptab){render.k=tab+btab+ptab;v.classList.remove('anim');void v.offsetWidth;v.classList.add('anim')}
   if(tab==='menu'){
-    v.innerHTML=`<div class="menu"><button class="nick" data-go="profile">${esc(S.nick||'')}</button><div class="tools"><button class="ico" data-go="season">📅${S.ss!==Math.floor(sT()/SDAY)?'<em>!</em>':''}</button><div class="rc"><button class="ico" data-go="quests">✉️${S.q.length?'<em>'+(S.q.length>10?'10+':S.q.length)+'</em>':''}</button><a class="tgb" data-tgl="1" href="https://t.me/FarmLand_news" target="_blank" rel="noopener noreferrer" aria-label="Новости игры"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 4L3 11l6 2 2 6 3-4 4 3z" style="fill:var(--on)"/></svg></a></div></div><div class="mid"><div class="mgrid"><button class="wide" data-go="field">Ферма</button><button class="wide w2" data-go="barn">Амбар</button><button class="wide w3" data-go="pass">Farm Pass</button></div></div><div class="mb"><button class="sq" data-go="settings"><b>⚙️</b><span>Настройки</span></button><button class="sq" data-go="shop"><b>🛒</b><span>Магазин</span></button></div></div>`;
+    v.innerHTML=`<div class="menu"><button class="nick" data-go="profile">${esc(S.nick||'')}</button><div class="tools"><button class="ico" data-go="season">📅${S.ss!==Math.floor(sT()/SDAY)?'<em>!</em>':''}</button><div class="rc"><button class="ico" data-go="quests">✉️${S.q.length?'<em>'+(S.q.length>10?'10+':S.q.length)+'</em>':''}</button><a class="tgb" data-tgl="1" href="https://t.me/FarmLand_news" target="_blank" rel="noopener noreferrer" aria-label="Новости игры"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 4L3 11l6 2 2 6 3-4 4 3z" style="fill:var(--on)"/></svg></a></div></div><div class="mid"><div class="mgrid"><button class="wide" data-go="field">Ферма</button><button class="wide w2" data-go="barn">Амбар</button><button class="wide w3" data-go="pass">Farm Pass${passBang()?'<em>!</em>':''}</button></div></div><div class="mb"><button class="sq" data-go="settings"><b>⚙️</b><span>Настройки</span></button><button class="sq" data-go="shop"><b>🛒</b><span>Магазин</span></button></div></div>`;
     return;
   }
   if(tab==='welcome'){
@@ -718,7 +810,7 @@ function render(){
     h.textContent='Профиль';
     if(srvOn()&&(!S.pid||!render.pT||Date.now()-render.pT>30000)){render.pT=Date.now();profSync(true)}
     const L=lvl(),a=LX[L-1],b=L<20?LX[L]:a,pr=L<20?Math.round((S.xp-a)/(b-a)*100):100;
-    v.innerHTML=`<div class="prof"><button class="pic" data-pickt="1">${ICONS[S.icon||0]}</button>${pick?`<div class="seeds">${ICONS.map((ic,i)=>(i<3||(S.picons||[]).includes(i))?`<button class="chip" style="font-size:28px" data-icon="${i}">${ic}</button>`:'').join('')}</div>`:'<small class="lbl">Нажми на иконку, чтобы сменить</small>'}<button class="pname" data-nt="1">${esc(S.nick||'')}</button><button class="pid" data-copyid="${S.pid||''}">ID: ${S.pid||(srvOn()?'…':'появится в Telegram')}</button>${titleHtml()}</div><button class="btn" style="width:100%;padding:14px;font-size:17px;margin:0 0 14px" data-go="friends">👥 Друзья${fInc?' · новых заявок: '+fInc:''}</button><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-S.xp)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${S.xp}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${new Date(S.rd||Date.now()).toLocaleDateString('ru-RU')}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${medalHtml()}<div class="slot"></div><div class="slot"></div></div>`;
+    v.innerHTML=`<div class="prof"><button class="ico frb" data-go="friends" aria-label="Друзья">👥${fInc?'<em>'+fInc+'</em>':''}</button><button class="pic" data-pickt="1">${ICONS[S.icon||0]}</button>${pick?`<div class="seeds">${ICONS.map((ic,i)=>(i<3||(S.picons||[]).includes(i))?`<button class="chip" style="font-size:28px" data-icon="${i}">${ic}</button>`:'').join('')}</div>`:''}<button class="pname" data-nt="1">${esc(S.nick||'')}</button><button class="pid" data-copyid="${S.pid||''}">ID: ${S.pid||(srvOn()?'…':'появится в Telegram')}</button>${titleHtml()}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-S.xp)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${S.xp}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${new Date(S.rd||Date.now()).toLocaleDateString(LOC())}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${medalHtml()}<div class="slot"></div><div class="slot"></div></div>`;
     return;
   }
   if(tab==='intro'){
@@ -743,12 +835,12 @@ function render(){
     if(pvw.err){v.innerHTML='<div class="empty-msg">'+(pvw.err==='nf'?'Игрок с таким ID не найден':'Не удалось загрузить профиль')+'</div>';return}
     const P=pvw,x=P.xp||0,L=lvlX(x),a=LX[L-1],b=L<20?LX[L]:a,pr=L<20?Math.round((x-a)/(b-a)*100):100,tt=TITLES.find(t=>t.id===P.title);
     const act=P.rel==='self'?'':P.rel==='friend'?`<button class="btn" style="width:100%;margin-top:14px;background:var(--soil)" data-frm="${P.id}">Удалить из друзей</button>`:P.rel==='out'?`<p class="lbl" style="margin-top:14px">Заявка отправлена</p><button class="btn" style="width:100%;background:var(--soil)" data-frm="${P.id}">Отменить заявку</button>`:P.rel==='in'?`<p class="lbl" style="margin-top:14px">Хочет добавить тебя в друзья</p><div style="display:flex;gap:10px"><button class="btn" style="flex:1" data-facc="${P.id}">Принять</button><button class="btn" style="flex:1;background:var(--soil)" data-fdec="${P.id}">Отклонить</button></div>`:`<button class="btn" style="width:100%;margin-top:14px" data-fadd="${P.id}">Добавить в друзья</button>`;
-    v.innerHTML=`<div class="prof"><div class="pic st">${ICONS[P.icon]||ICONS[0]}</div><div class="pname">${esc(P.nick||'')}</div><button class="pid" data-copyid="${P.id}">ID: ${P.id}</button>${tt?`<div class="gold">${tt.n}</div>`:''}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-x)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${x}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${P.rd?new Date(P.rd).toLocaleDateString('ru-RU'):'—'}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${vetFor(P.rd)?'<button class="ach" data-pmedal="1"><span class="ic">🎖️</span></button>':'<div class="slot"></div>'}<div class="slot"></div><div class="slot"></div></div>${act}`;
+    v.innerHTML=`<div class="prof"><div class="pic st">${ICONS[P.icon]||ICONS[0]}</div><div class="pname">${esc(P.nick||'')}</div><button class="pid" data-copyid="${P.id}">ID: ${P.id}</button>${tt?`<div class="gold">${tt.n}</div>`:''}</div><div class="row"><div class="t">Уровень ${L}${L>=20?' · максимум':''}<small>${L<20?'До следующего: '+(b-x)+' опыта':'Максимальный уровень'}</small><div class="bar2" style="margin:6px 0 0"><i style="width:${pr}%"></i></div></div></div><div class="row"><div class="t">Всего опыта<small>${x}</small></div></div><div class="row"><div class="t">Дата регистрации<small>${P.rd?new Date(P.rd).toLocaleDateString(LOC()):'—'}</small></div></div><p class="lbl" style="margin-top:16px">Медали</p><div class="achs">${vetFor(P.rd)?'<button class="ach" data-pmedal="1"><span class="ic">🎖️</span></button>':'<div class="slot"></div>'}<div class="slot"></div><div class="slot"></div></div>${act}`;
     return;
   }
   if(tab==='admin'){
     h.textContent='Игроки (временно)';
-    const A=admD||{total:0,list:[]},fd=t=>t?new Date(t).toLocaleDateString('ru-RU'):'—';
+    const A=admD||{total:0,list:[]},fd=t=>t?new Date(t).toLocaleDateString(LOC()):'—';
     v.innerHTML=`<p class="lbl">Всего игроков: <b>${A.total}</b>${typeof A.updated==='number'?' · уже с новой версией: <b>'+A.updated+'</b>':''}${A.list.length<A.total?' · показаны последние '+A.list.length:''}</p>`+A.list.map(p=>p.pid?`<div class="row"><span class="ic">${ICONS[p.icon]||ICONS[0]}</span><div class="t"><b>${esc(p.nick||'—')}</b><small>ID ${p.pid} · ур. ${lvlX(p.xp)} · с ${fd(p.rd||p.created)} · был ${fd(p.seen)}</small></div></div>`:`<div class="row"><span class="ic">👤</span><div class="t"><b>—</b><small>ещё не открывал новую версию · в игре с ${fd(p.created)}</small></div></div>`).join('');
     return;
   }
@@ -774,7 +866,7 @@ function render(){
     return;
   }
   if(tab==='pass'){
-    h.textContent='Farm Pass';passCheck();
+    h.textContent='Farm Pass';passCheck();{const k0=S.pp.d.day+':'+S.pp.w.wk;if(S.pseen!==k0){S.pseen=k0;save()}}
     const P=S.pp,L=pLvl(),left=passEnd(P)-Date.now(),cur=pcum(L),pr=L<PL?Math.round((P.stars-cur)/(pcum(L+1)-cur)*100):100;
     let html=`<div class="ph"><div class="ph-top"><div><div class="ph-k">FARM PASS</div><div class="ph-t">Новое начало</div><div class="ph-s">Сезон 1 · ${left>0?'до конца '+dl(left):'сезон завершён'}</div></div><div class="ph-lv"><b>${L}</b><span>уровень</span></div></div><div class="ph-bar"><i style="width:${pr}%"></i></div><div class="ph-row"><span>🌟 ${P.stars}</span><span>${L<PL?'до уровня '+(L+1)+': ещё '+(pcum(L+1)-P.stars):'максимальный уровень'}</span></div>${premOk()?'<div class="ph-prem on">👑 Premium активен до конца сезона</div>':(left>0?'<button class="ph-prem" data-buyprem="1">👑 Открыть Premium · 250 ⭐ Stars</button>':'<div class="ph-prem on">Premium закончился вместе с сезоном</div>')}</div><div class="seg"><button class="${ptab==='tasks'?'on':''}" data-ptab="tasks">Задания</button><button class="${ptab==='rew'?'on':''}" data-ptab="rew">Награды</button></div>`;
     if(ptab==='tasks'){
@@ -791,7 +883,7 @@ function render(){
   if(tab==='settings'){
     h.textContent='Настройки';
     const th=S.theme||'auto';
-    v.innerHTML=`<p class="lbl">Ник: ${esc(S.nick||'')}</p><input id="nn" class="nick" maxlength="16" placeholder="Новый ник" autocomplete="off" style="margin:0 0 10px"><button class="btn" style="width:100%;padding:12px" data-nick="1">Сменить ник · 1475 🪙</button><p class="lbl" style="margin-top:20px">Тема</p><div class="seeds">${[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(([k,n])=>`<button class="chip ${th===k?'on':''}" data-theme="${k}">${n}</button>`).join('')}</div><a class="btn" data-ext="1" href="https://youtube.com/@pocket_farmland?si=qgeCB45LtzX085ud" target="_blank" rel="noopener noreferrer" style="width:100%;margin-top:16px">▶ YouTube-канал игры</a><button class="btn danger" data-reset="1">Сбросить прогресс</button><div style="text-align:center;opacity:.4;font-size:12px;margin-top:auto;padding:24px 0 8px">Версия: 1.2.1</div>`;
+    v.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><a class="yt" data-ext="1" aria-label="YouTube-канал игры" href="https://youtube.com/@pocket_farmland?si=qgeCB45LtzX085ud" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="#fff"/></svg></a></div><p class="lbl">Ник: ${esc(S.nick||'')}</p><input id="nn" class="nick" maxlength="16" placeholder="Новый ник" autocomplete="off" style="margin:0 0 10px"><button class="btn" style="width:100%;padding:12px" data-nick="1">Сменить ник · 1475 🪙</button><p class="lbl" style="margin-top:20px">Тема</p><div class="seeds">${[['auto','Авто'],['light','Светлая'],['dark','Тёмная']].map(([k,n])=>`<button class="chip ${th===k?'on':''}" data-theme="${k}">${n}</button>`).join('')}</div><button class="btn danger" data-reset="1">Сбросить прогресс</button><p class="lbl" style="margin-top:16px">Язык / Language</p><div class="seeds lang">${['ru','en'].map(k=>`<button class="chip ${lang()===k?'on':''}" data-lang="${k}">${k.toUpperCase()}</button>`).join('')}</div><div style="text-align:center;opacity:.4;font-size:12px;margin-top:auto;padding:24px 0 8px">Версия: 1.2.1</div>`;
     return;
   }
   if(tab==='gh'&&!S.gh){
@@ -854,6 +946,7 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.frm){if(b.dataset.c!=='1'){b.dataset.c='1';b.textContent='Нажми ещё раз';return}fAct('/friends/remove',d.frm).then(j=>{if(j)toast('Готово')});return}
   else if(d.pmedal){toast('Медаль ветерана: игрок с нами больше года');return}
   else if(d.theme){S.theme=d.theme;applyTheme()}
+  else if(d.lang){S.lang=d.lang==='en'?'en':'ru';applyLang()}
   else if(d.reset){if(!window.rs){window.rs=1;b.textContent='Нажми ещё раз: всё сотрётся';return}b.disabled=true;b.textContent='Сбрасываем…';window.resetting=true;cloudEpoch++;cloudPending=null;(async()=>{try{await cloudWriteQueue;await clearCloud();try{localStorage.removeItem(KEY)}catch(x){}location.reload()}catch(err){window.resetting=false;b.disabled=false;b.textContent='Сбросить прогресс';window.rs=0;toast('Не удалось очистить облачное сохранение. Попробуй ещё раз внутри Telegram.');console.error(err)}})();return}
   else if(d.btab){btab=d.btab}
   else if(d.ach){const a=AT[d.ach],L=alv(d.ach),nx=a.lv[L];toast(nx?a.name+' '+R[L+1]+': '+a.verb+' '+nx+' '+a.unit+' ('+a.get()+'/'+nx+')':a.name+' III: достигнут максимальный уровень')}
@@ -872,8 +965,8 @@ document.getElementById('view').addEventListener('click',e=>{
   else if(d.pump){if(pumpOn()&&(S.cr||0)>=15){S.cr-=15;S.picons=S.picons||[];if(!S.picons.includes(3))S.picons.push(3);toast('Получена иконка 🎃');fly('🎃 Иконка',e)}else{toast('Не хватает кристаллов');return}}
   else if(d.zom){if(zomOn()){S.skins=S.skins||[];if(!S.skins.includes('halloween'))S.skins.push('halloween');toast('Получен скин «Зомби Пугало»');fly('🧟 Скин',e)}}
   else if(d.skin){S.sc.skin=d.skin==='classic'?'':d.skin}
-  else if(d.inv){const si=Number(d.inv),st=REF_ST[si];if(!st)return;if(srvOn()){(async()=>{try{const j=await payPost('/ref/claim',{stage:si});S.refd=S.refd||[];if(j.ok){S.refd[si]=true;S.cr=(S.cr||0)+st.cr;toast('Награда: '+st.cr+' 💎')}else if(j.already){S.refd[si]=true;toast('Награда уже получена')}else{toast('Пока приглашено меньше '+st.need+' друзей');refSync(true);return}save();render()}catch(e){toast('Нет связи с сервером, попробуй позже')}})();return}if((S.inv||0)>=st.need){S.refd=S.refd||[];S.refd[si]=true;S.cr=(S.cr||0)+st.cr;toast('Награда: '+st.cr+' 💎')}else{const u='https://t.me/share/url?url='+encodeURIComponent('https://t.me/FarmLand_news')+'&text='+encodeURIComponent('Заходи в Pocket FarmLand!');if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}}
-  else if(d.medal){toast(vetOk()?'Медаль ветерана: ты с нами больше года':(S.rd&&S.rd<Date.UTC(2027,0,1)?'Медаль ветерана: придёт через год после регистрации, '+new Date(S.rd+365*864e5).toLocaleDateString('ru-RU'):'Медаль ветерана выдаётся тем, кто зарегистрировался до 1 января 2027'))}
+  else if(d.inv){const si=Number(d.inv),st=REF_ST[si];if(!st)return;if(srvOn()){(async()=>{try{const j=await payPost('/ref/claim',{stage:si});S.refd=S.refd||[];if(j.ok){S.refd[si]=true;S.cr=(S.cr||0)+st.cr;toast('Награда: '+st.cr+' 💎')}else if(j.already){S.refd[si]=true;toast('Награда уже получена')}else{toast('Пока приглашено меньше '+st.need+' друзей');refSync(true);return}save();render()}catch(e){toast('Нет связи с сервером, попробуй позже')}})();return}if((S.inv||0)>=st.need){S.refd=S.refd||[];S.refd[si]=true;S.cr=(S.cr||0)+st.cr;toast('Награда: '+st.cr+' 💎')}else{const u='https://t.me/share/url?url='+encodeURIComponent('https://t.me/FarmLand_news')+'&text='+encodeURIComponent(T('Заходи в Pocket FarmLand!'));if(TG&&TG.openTelegramLink)TG.openTelegramLink(u);else window.open(u,'_blank','noopener');return}}
+  else if(d.medal){toast(vetOk()?'Медаль ветерана: ты с нами больше года':(S.rd&&S.rd<Date.UTC(2027,0,1)?'Медаль ветерана: придёт через год после регистрации, '+new Date(S.rd+365*864e5).toLocaleDateString(LOC()):'Медаль ветерана выдаётся тем, кто зарегистрировался до 1 января 2027'))}
   else if(d.tplus){if(!TITLES.some(t=>t.ok())){toast('Титулов пока нет: получай достижения');return}tpick=!tpick}
   else if(d.title!==undefined){S.title=d.title;tpick=false}
   else if(d.mk){selM=selM===d.mk?'':d.mk}
@@ -916,7 +1009,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 addEventListener('pagehide',leave);addEventListener('beforeunload',leave);
 if(TG){try{TG.onEvent('deactivated',leave);TG.onEvent('activated',()=>{syncTime();refSync()})}catch(e){}}}
 setInterval(tick,1000);
-applyTheme();
+applyTheme();applyLang();
 render();
 if(cloudUsable&&(!cloudInitial||migrateLocalToCloud||repairPlotsFromLocal||preferLocal))save();
 {const rp=S.plots.filter(p=>p.c&&Date.now()-p.t>=CROPS[p.c].time*1000).length;if(rp&&S.reg)setTimeout(()=>toast('Пока тебя не было, созрело: '+rp),300)}
