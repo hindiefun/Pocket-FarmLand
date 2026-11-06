@@ -606,7 +606,7 @@ const invHtml=()=>{const d=S.refd||[],n=S.inv||0,i=REF_ST.findIndex((_,j)=>!d[j]
 const REF_BASE='https://t.me/pocketfarmland_bot?startapp=ref_';
 const srvOn=()=>!!(PAY_API&&TG&&TG.initData);
 const myId=()=>{try{return TG.initDataUnsafe.user.id||0}catch(e){return 0}};
-const refLink=()=>srvOn()&&myId()?REF_BASE+myId():'https://t.me/pocketfarmland_bot';
+const refLink=()=>srvOn()&&S.pid?REF_BASE+'p'+S.pid:'https://t.me/pocketfarmland_bot';
 const SHARE_TXT='Заходи в Pocket FarmLand: уютная ферма прямо в Telegram! Сажай культуры, продавай урожай и собирай награды. Играть: @pocketfarmland_bot';
 const SHARE=()=>'https://t.me/share/url?url='+encodeURIComponent(refLink())+'&text='+encodeURIComponent(T(SHARE_TXT));
 async function refSync(force){
